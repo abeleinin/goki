@@ -9,7 +9,7 @@ import (
   "github.com/charmbracelet/lipgloss"
 )
 
-type Flashcard struct {
+type Form struct {
   help        help.Model
   question    textinput.Model
   answer      textinput.Model
@@ -20,12 +20,12 @@ type Flashcard struct {
 
 var promptStyle = lipgloss.NewStyle().Width(100).Align(lipgloss.Center).MarginTop(10)
 
-func newDefaultFlashcard() *Flashcard {
-  return NewFlashcard("Write Question Here...", "Answer Here...")
+func newDefaultForm() *Form {
+  return NewForm("Write Question Here...", "Answer Here...")
 }
 
-func NewFlashcard(question, answer string) *Flashcard {
-  fc := Flashcard{
+func NewForm(question, answer string) *Form {
+  fc := Form{
     help:       help.New(),
     question:   textinput.New(),
     answer:     textinput.New(),
@@ -36,21 +36,20 @@ func NewFlashcard(question, answer string) *Flashcard {
   return &fc
 }
 
-func (f Flashcard) EditCard(card *Card) *Card {
+func (f Form) EditCard(card *Card) {
   card.front = f.question.Value()
   card.back = f.answer.Value()
-  return card 
 }
 
-func (f Flashcard) CreateCard() *Card {
+func (f Form) CreateCard() *Card {
   return NewCard(f.question.Value(), f.answer.Value())
 }
 
-func (f Flashcard) Init() tea.Cmd {
+func (f Form) Init() tea.Cmd {
   return nil
 }
 
-func (f Flashcard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (f Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
   var cmd tea.Cmd
   switch msg := msg.(type) {
   case tea.KeyMsg:
@@ -84,10 +83,10 @@ func (f Flashcard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
   return f, cmd
 }
 
-func (f Flashcard) View() string {
+func (f Form) View() string {
   prompt := lipgloss.JoinVertical(
     lipgloss.Top,
-    "Create a new Flashcard:",
+    "Create a new Form:",
     f.question.View(),
     f.answer.View(),
     f.help.View(keys),

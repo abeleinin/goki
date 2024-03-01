@@ -109,12 +109,12 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         sg_user.UpdateTable()
         return sg_user.Update(nil)
       case key.Matches(msg, keys.New):
-        f := newDefaultFlashcard()
+        f := newDefaultForm()
         f.edit = false
         return f.Update(nil)
       case key.Matches(msg, keys.Edit):
         card := d.cards.SelectedItem().(*Card)
-        f := NewFlashcard(card.front, card.back)
+        f := NewForm(card.front, card.back)
         f.index = d.cards.Index()
         f.edit = true
         return f.Update(nil)

@@ -102,11 +102,11 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     case tea.WindowSizeMsg:
       h, v := docStyle.GetFrameSize()
       docStyle = docStyle.Width(msg.Width - h).Height(msg.Height - v)
-    case Flashcard:
+    case Form:
       i := sg_user.table.Cursor()
-      card := u.decks[i].cards.SelectedItem()
+      card := u.decks[i].cards.Items()[msg.index]
       if msg.edit {
-        u.decks[i].cards.SetItem(msg.index, msg.EditCard(card.(*Card)))
+        msg.EditCard(card.(*Card))
       } else {
         u.decks[i].cards.InsertItem(0, msg.CreateCard())
         u.decks[i].NumNewInc()
