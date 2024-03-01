@@ -123,8 +123,9 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (u *User) View() string {
   logoStyle := lipgloss.NewStyle().
-  Bold(true).
-  Foreground(lipgloss.Color("0"))
+                Bold(true).
+                Foreground(lipgloss.Color("0")).
+                MarginBottom(1)
 
   gokiLogo := `   ________        __    __  
   /  _____/  ____ |  | _|__|

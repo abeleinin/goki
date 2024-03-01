@@ -2,12 +2,12 @@ package main
 
 import (
   "strconv"
-	"time"
+  "time"
 
   "github.com/charmbracelet/bubbles/list"
   "github.com/charmbracelet/bubbles/key"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+  tea "github.com/charmbracelet/bubbletea"
+  "github.com/charmbracelet/lipgloss"
 )
 
 var listStyle = lipgloss.NewStyle().Margin(1, 2)
@@ -41,15 +41,15 @@ func NewCard(front, back string) *Card {
 }
 
 type Deck struct {
-	// Deck table information
+  // Deck table information
   name        string 
   numNew      int
   numLearning int
   numReview   int
   numComplete int
 
-	// Deck data
-  json 		 string 
+  // Deck data
+  json     string 
   cards    list.Model
 }
 
@@ -82,29 +82,29 @@ func (c Card) Title()       string { return c.front }
 func (c Card) Description() string { return c.back }
 
 func newDefaultDeck() *Deck {
-	return NewDeck("Deck Name", list.New(nil, list.NewDefaultDelegate(), 0, 0))
+  return NewDeck("Deck Name", list.New(nil, list.NewDefaultDelegate(), 0, 0))
 }
 
 func NewDeck(name string, cards list.Model) *Deck {
-	d := &Deck{
-		name: name,
-		cards: cards,
-	}
+  d := &Deck{
+    name: name,
+    cards: cards,
+  }
   d.UpdateStatus()
   return d
 }
 
 func (d Deck) Init() tea.Cmd {
-	return nil
+  return nil
 }
 
 func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
+  var cmd tea.Cmd
+  switch msg := msg.(type) {
+  case tea.KeyMsg:
     switch {
       case key.Matches(msg, keys.Quit):
-			  return d, tea.Quit
+        return d, tea.Quit
       case key.Matches(msg, keys.Back):
         sg_user.UpdateTable()
         return sg_user.Update(nil)
@@ -119,16 +119,16 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         f.edit = true
         return f.Update(nil)
     }
-	case tea.WindowSizeMsg:
-		h, v := listStyle.GetFrameSize()
-		d.cards.SetSize(msg.Width-h, msg.Height-v)
-	}
-	d.cards.SetSize(100, 50)
+  case tea.WindowSizeMsg:
+    h, v := listStyle.GetFrameSize()
+    d.cards.SetSize(msg.Width-h, msg.Height-v)
+  }
+  d.cards.SetSize(100, 50)
 
-	d.cards, cmd = d.cards.Update(msg)
-	return d, cmd
+  d.cards, cmd = d.cards.Update(msg)
+  return d, cmd
 }
 
 func (d Deck) View() string {
-	return listStyle.Render(d.cards.View())
+  return listStyle.Render(d.cards.View())
 }

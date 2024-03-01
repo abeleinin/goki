@@ -11,8 +11,8 @@ import (
 
 type Flashcard struct {
   help        help.Model
-  question 		textinput.Model
-  answer 			textinput.Model
+  question    textinput.Model
+  answer      textinput.Model
 
   index       int  
   edit        bool
@@ -27,8 +27,8 @@ func newDefaultFlashcard() *Flashcard {
 func NewFlashcard(question, answer string) *Flashcard {
   fc := Flashcard{
     help:       help.New(),
-    question:  	textinput.New(),
-    answer: 		textinput.New(),
+    question:   textinput.New(),
+    answer:     textinput.New(),
   }
   fc.question.Placeholder = question
   fc.answer.Placeholder = answer
@@ -57,7 +57,7 @@ func (f Flashcard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     switch {
     case key.Matches(msg, keys.Back):
       i := sg_user.table.Cursor()
-    	return sg_user.decks[i].Update(nil)
+      return sg_user.decks[i].Update(nil)
     case key.Matches(msg, keys.Enter):
       if f.question.Focused() {
         f.question.Blur()
