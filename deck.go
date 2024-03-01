@@ -1,8 +1,8 @@
 package main
 
 import (
-  "strconv"
   "time"
+  "strconv"
 
   "github.com/charmbracelet/bubbles/list"
   "github.com/charmbracelet/bubbles/key"
@@ -49,11 +49,20 @@ type Deck struct {
   numComplete int
 
   // Deck data
-  json     string 
-  cards    list.Model
+  json      string 
+  cards     list.Model
+  rdata     ReviewData
+}
+
+type ReviewData struct {
+  reviewing bool
+  complete  bool
+  curr      *Card 
+  currIx    int
 }
 
 func (d *Deck) UpdateStatus() {
+  d.numNew, d.numLearning, d.numReview, d.numComplete = 0,0,0,0
   for _, card := range d.cards.Items() {
     c := card.(*Card)
     switch c.status {
@@ -64,9 +73,16 @@ func (d *Deck) UpdateStatus() {
     case Review:
         d.numReview++
     case Complete:
-        d.numReview++
+        d.numComplete++
     }
   }
+}
+
+func (d *Deck) StartReview() {
+  d.rdata.reviewing = true
+  d.rdata.complete = false
+  d.rdata.currIx = 0
+  d.rdata.curr = d.cards.Items()[d.rdata.currIx].(*Card)
 }
 
 func (d Deck) Name()        string { return d.name }
@@ -118,11 +134,47 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         f.index = d.cards.Index()
         f.edit = true
         return f.Update(nil)
+      case key.Matches(msg, keys.Open):
+        d.rdata.complete = true
+        return d.Update(nil)
+      case key.Matches(msg, keys.Easy):
+        if d.rdata.complete {
+          d.rdata.curr.score = 1
+          d.rdata.curr.status = Complete
+          d.rdata.currIx++
+          d.rdata.complete = false
+        }
+      case key.Matches(msg, keys.Medium):
+        if d.rdata.complete {
+          d.rdata.curr.score = 0
+          d.rdata.curr.status = Learning
+          d.rdata.currIx++
+          d.rdata.complete = false
+        }
+      case key.Matches(msg, keys.Hard):
+        if d.rdata.complete {
+          d.rdata.curr.score = 0
+          d.rdata.curr.status = New
+          d.rdata.currIx++
+          d.rdata.complete = false
+        }
     }
   case tea.WindowSizeMsg:
     h, v := listStyle.GetFrameSize()
     d.cards.SetSize(msg.Width-h, msg.Height-v)
   }
+
+  if d.rdata.currIx > len(d.cards.Items()) - 1 {
+    d.rdata.reviewing = false
+    d.rdata.complete = false
+    i := sg_user.table.Cursor()
+    sg_user.decks[i].UpdateStatus()
+    sg_user.UpdateTable()
+    return sg_user.Update(nil)
+  } else {
+    d.rdata.curr = d.cards.Items()[d.rdata.currIx].(*Card)
+  }
+
   d.cards.SetSize(100, 50)
 
   d.cards, cmd = d.cards.Update(msg)
@@ -130,5 +182,12 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (d Deck) View() string {
+  if d.rdata.reviewing {
+    if d.rdata.complete {
+      return d.rdata.curr.front + "\n" + d.rdata.curr.back
+    } else {
+      return d.rdata.curr.front
+    }
+  }
   return listStyle.Render(d.cards.View())
 }

@@ -26,6 +26,11 @@ type keyMap struct {
   Quit   key.Binding
   Back   key.Binding
   Tab    key.Binding
+  Review key.Binding
+  Open   key.Binding
+  Easy   key.Binding
+  Medium key.Binding
+  Hard   key.Binding
 }
 
 var keys = keyMap{
@@ -76,5 +81,25 @@ var keys = keyMap{
   Tab: key.NewBinding(
     key.WithKeys("tab"),
     key.WithHelp("tab", "move focus"),
+  ),
+  Review: key.NewBinding(
+    key.WithKeys("r"),
+    key.WithHelp("r", "Review selected deck"),
+  ),
+  Open: key.NewBinding(
+    key.WithKeys("o"),
+    key.WithHelp("o", "Reveal card"),
+  ),
+  Easy: key.NewBinding(
+    key.WithKeys("1"),
+    key.WithHelp("1", "Card easy"),
+  ),
+  Medium: key.NewBinding(
+    key.WithKeys("2"),
+    key.WithHelp("2", "Card medium"),
+  ),
+  Hard: key.NewBinding(
+    key.WithKeys("3"),
+    key.WithHelp("3", "Card hard"),
   ),
 }

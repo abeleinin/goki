@@ -96,6 +96,12 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         case key.Matches(msg, keys.Enter):
           i := u.table.Cursor()
           return u.decks[i].Update(nil)
+        case key.Matches(msg, keys.Review):
+          i := sg_user.table.Cursor()
+          u.decks[i].StartReview()
+          return u.decks[i].Update(nil)
+        case key.Matches(msg, keys.Back):
+          return u.Update(nil)
         // case key.Matches(msg, keys.Save):
         //   u.writeJSON()
       }
