@@ -1,6 +1,7 @@
 package main
 
 import (
+  "strconv"
 	"time"
 
   "github.com/charmbracelet/bubbles/list"
@@ -11,48 +12,92 @@ import (
 
 var listStyle = lipgloss.NewStyle().Margin(1, 2)
 
+type Status int
+
+const (
+  New Status = iota
+  Learning
+  Review
+  Complete
+)
+
 type Card struct {
-  id       string 
   front    string 
   back     string 
 
-  status   int    // 0 = new, 1 = learning, 2 = review
+  score    int
+  status   Status
   reviewAt time.Time 
+}
+
+func NewCard(front, back string) *Card {
+  return &Card{
+    front: front,
+    back: back,
+    score: 0,
+    status: New,
+    reviewAt: time.Now(),
+  }
 }
 
 type Deck struct {
 	// Deck table information
-  name     string 
-  new      int
-  learning int
-  review   int
+  name        string 
+  numNew      int
+  numLearning int
+  numReview   int
+  numComplete int
 
 	// Deck data
   json 		 string 
   cards    list.Model
 }
 
-func (d Deck) Name() string        { return d.name }
+func (d *Deck) UpdateStatus() {
+  for _, card := range d.cards.Items() {
+    c := card.(*Card)
+    switch c.status {
+    case New:
+        d.numNew++
+    case Learning:
+        d.numLearning++
+    case Review:
+        d.numReview++
+    case Complete:
+        d.numReview++
+    }
+  }
+}
+
+func (d Deck) Name()        string { return d.name }
+func (d Deck) NumNew()      string { return strconv.Itoa(d.numNew) }
+func (d Deck) NumLearning() string { return strconv.Itoa(d.numLearning) }
+func (d Deck) NumReview()   string { return strconv.Itoa(d.numReview) }
+func (d Deck) NumComplete() string { return strconv.Itoa(d.numComplete) }
+
+func (d *Deck) NumNewInc()         { d.numNew++ }
 
 func (c Card) FilterValue() string { return c.front }
 func (c Card) Title()       string { return c.front }
 func (c Card) Description() string { return c.back }
 
 func newDefaultDeck() *Deck {
-	return NewDeck("Deck Name", "JSON Data")
+	return NewDeck("Deck Name", list.New(nil, list.NewDefaultDelegate(), 0, 0))
 }
 
-func NewDeck(name, json string) *Deck {
-	return &Deck{
+func NewDeck(name string, cards list.Model) *Deck {
+	d := &Deck{
 		name: name,
-		json: json,
-		// cards: list.New(nil, list.NewDefaultDelegate(), 0, 0),
+		cards: cards,
 	}
+  d.UpdateStatus()
+  return d
 }
 
 func (d Deck) Init() tea.Cmd {
 	return nil
 }
+
 func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
@@ -61,13 +106,14 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       case key.Matches(msg, keys.Quit):
 			  return d, tea.Quit
       case key.Matches(msg, keys.Back):
+        sg_user.UpdateTable()
         return sg_user.Update(nil)
       case key.Matches(msg, keys.New):
         f := newDefaultFlashcard()
         f.edit = false
         return f.Update(nil)
       case key.Matches(msg, keys.Edit):
-        card := d.cards.SelectedItem().(Card)
+        card := d.cards.SelectedItem().(*Card)
         f := NewFlashcard(card.front, card.back)
         f.index = d.cards.Index()
         f.edit = true

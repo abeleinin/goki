@@ -17,25 +17,23 @@ func main() {
   sg_user = NewUser()
 
   cards := []list.Item{
-    Card{front: "2 * 5", back: "10"},
-    Card{front: "50 * 3", back: "150"},
-    Card{front: "7 * 5", back: "35"},
-    Card{front: "9 * 9", back: "81"},
+    NewCard("What's 2 * 2?", "4"),
+    NewCard("What's 3 * 3?", "9"),
+    NewCard("What's 4 * 4?", "16"),
+    NewCard("What's 5 * 5?", "25"),
+    NewCard("What's 6 * 6?", "36"),
   }
   cards2 := []list.Item{
-    Card{front: "What's my name?", back: "Abe Leininger"},
-    Card{front: "How old are you?", back: "22"},
+    NewCard("What's my name?", "Abe Leininger"),
+    NewCard("What's my favorite color?", "Blue"),
+    NewCard("How old are you?", "22"),
   }
 
-  deck := Deck{
-    name: "Math Deck",
-    cards: list.New(cards, list.NewDefaultDelegate(), 0, 0),
-  }
+  deck := NewDeck("Math Deck", 
+                  list.New(cards, list.NewDefaultDelegate(), 0, 0))
 
-  deck2 := Deck{
-    name: "About Me Deck",
-    cards: list.New(cards2, list.NewDefaultDelegate(), 0, 0),
-  }
+  deck2 := NewDeck("About Me Deck", 
+                  list.New(cards2, list.NewDefaultDelegate(), 0, 0))
 
   sg_user.decks = append(sg_user.decks, deck)
   sg_user.decks = append(sg_user.decks, deck2)
@@ -44,21 +42,16 @@ func main() {
     {Title: "Deck", Width: 20},
     {Title: "New", Width: 10},
     {Title: "Learning", Width: 10},
-    {Title: "Due", Width: 10},
+    {Title: "Review", Width: 10},
   }
 
   rows := []table.Row{}
   for _, deck := range sg_user.decks {
-    rows = append(rows, table.Row{deck.Name(), "0", "0", "0"})
+    rows = append(rows, table.Row{deck.Name(), 
+                                  deck.NumNew(), 
+                                  deck.NumLearning(),
+                                  deck.NumReview()})
   }
-
-  // data := []table.Row{
-  //   {"Deck 1", "10", "20", "30"},
-  //   {"Deck 2", "40", "50", "60"},
-  //   {"Deck 3", "400", "5", "12"},
-  //   {"Deck 4", "8", "7", "10"},
-  //   {"Deck 5", "4", "53", "62"},
-  // }
 
   sg_user.table = table.New(
     table.WithColumns(header),

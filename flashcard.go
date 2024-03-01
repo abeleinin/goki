@@ -36,14 +36,14 @@ func NewFlashcard(question, answer string) *Flashcard {
   return &fc
 }
 
-func (f Flashcard) EditCard(card Card) Card {
+func (f Flashcard) EditCard(card *Card) *Card {
   card.front = f.question.Value()
   card.back = f.answer.Value()
   return card 
 }
 
-func (f Flashcard) CreateCard() Card {
-  return Card{front: f.question.Value(), back: f.answer.Value()}
+func (f Flashcard) CreateCard() *Card {
+  return NewCard(f.question.Value(), f.answer.Value())
 }
 
 func (f Flashcard) Init() tea.Cmd {

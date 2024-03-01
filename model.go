@@ -30,7 +30,25 @@ type User struct {
   help    help.Model
   table   table.Model
   input   []textinput.Model
-  decks   []Deck // table -> decks
+  decks   []*Deck // table -> decks
+}
+
+func (u *User) UpdateTable() {
+  i := u.table.Cursor()
+  currRows := u.table.Rows()
+  
+  rows := []table.Row{}
+  for j, _ := range currRows {
+    if j == i {
+      rows = append(rows, table.Row{u.decks[i].Name(), 
+                                    u.decks[i].NumNew(), 
+                                    u.decks[i].NumLearning(),
+                                    u.decks[i].NumReview()})
+    } else {
+      rows = append(rows, currRows[j])
+    }
+  }
+  sg_user.table.SetRows(rows)
 }
 
 func NewUser() *User {
@@ -88,9 +106,10 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       i := sg_user.table.Cursor()
       card := u.decks[i].cards.SelectedItem()
       if msg.edit {
-        u.decks[i].cards.SetItem(msg.index, msg.EditCard(card.(Card)))
+        u.decks[i].cards.SetItem(msg.index, msg.EditCard(card.(*Card)))
       } else {
         u.decks[i].cards.InsertItem(0, msg.CreateCard())
+        u.decks[i].NumNewInc()
       }
       return u.decks[i].Update(nil)
   }
