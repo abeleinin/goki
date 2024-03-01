@@ -47,6 +47,7 @@ func main() {
 
   rows := []table.Row{}
   for _, deck := range sg_user.decks {
+    deck.cards.Title = deck.Name()
     rows = append(rows, table.Row{deck.Name(), 
                                   deck.NumNew(), 
                                   deck.NumLearning(),
