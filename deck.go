@@ -53,7 +53,6 @@ func NewDeck(name, json string) *Deck {
 func (d Deck) Init() tea.Cmd {
 	return nil
 }
-
 func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
@@ -65,15 +64,18 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         return sg_user.Update(nil)
       case key.Matches(msg, keys.New):
         f := newDefaultFlashcard()
+        f.edit = false
+        return f.Update(nil)
+      case key.Matches(msg, keys.Edit):
+        card := d.cards.SelectedItem().(Card)
+        f := NewFlashcard(card.front, card.back)
+        f.index = d.cards.Index()
+        f.edit = true
         return f.Update(nil)
     }
 	case tea.WindowSizeMsg:
 		h, v := listStyle.GetFrameSize()
 		d.cards.SetSize(msg.Width-h, msg.Height-v)
-  case Flashcard:
-    i := sg_user.table.Cursor()
-    sg_user.decks[i].cards.InsertItem(0, msg.CreateCard())
-    return sg_user.decks[i].Update(nil)
 	}
 	d.cards.SetSize(100, 50)
 

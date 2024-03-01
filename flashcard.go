@@ -13,6 +13,9 @@ type Flashcard struct {
   help        help.Model
   question 		textinput.Model
   answer 			textinput.Model
+
+  index       int  
+  edit        bool
 }
 
 var promptStyle = lipgloss.NewStyle().Width(100).Align(lipgloss.Center).MarginTop(10)
@@ -31,6 +34,12 @@ func NewFlashcard(question, answer string) *Flashcard {
   fc.answer.Placeholder = answer
   fc.question.Focus()
   return &fc
+}
+
+func (f Flashcard) EditCard(card Card) Card {
+  card.front = f.question.Value()
+  card.back = f.answer.Value()
+  return card 
 }
 
 func (f Flashcard) CreateCard() Card {
@@ -55,8 +64,7 @@ func (f Flashcard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         f.answer.Focus()
         return f, textarea.Blink
       }
-      i := sg_user.table.Cursor()
-      return sg_user.decks[i].Update(f)
+      return sg_user.Update(f)
     case key.Matches(msg, keys.Tab):
       if f.answer.Focused() {
         f.answer.Blur()
