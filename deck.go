@@ -10,7 +10,10 @@ import (
   "github.com/charmbracelet/lipgloss"
 )
 
-var listStyle = lipgloss.NewStyle().Margin(1, 2)
+var (
+  listStyle = lipgloss.NewStyle().Margin(1, 2)
+  cardStyle = lipgloss.NewStyle().Align(lipgloss.Center)
+)
 
 type Status int
 
@@ -62,7 +65,7 @@ type ReviewData struct {
 }
 
 func (d *Deck) UpdateStatus() {
-  d.numNew, d.numLearning, d.numReview, d.numComplete = 0,0,0,0
+  d.numNew, d.numLearning, d.numReview, d.numComplete = 0, 0, 0, 0
   for _, card := range d.cards.Items() {
     c := card.(*Card)
     switch c.status {
@@ -160,7 +163,8 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         }
     }
   case tea.WindowSizeMsg:
-    h, v := listStyle.GetFrameSize()
+    h, v := cardStyle.GetFrameSize()
+    cardStyle = cardStyle.Width(msg.Width - h).Height(msg.Height - v)
     d.cards.SetSize(msg.Width-h, msg.Height-v)
   }
 
@@ -175,6 +179,9 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     d.rdata.curr = d.cards.Items()[d.rdata.currIx].(*Card)
   }
 
+  h, v := cardStyle.GetFrameSize()
+  cardStyle = cardStyle.MarginLeft(h/2).Height(v/2)
+
   d.cards.SetSize(100, 50)
 
   d.cards, cmd = d.cards.Update(msg)
@@ -183,11 +190,30 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (d Deck) View() string {
   if d.rdata.reviewing {
+    var ui string
+    questStyle := lipgloss.NewStyle().
+                  Bold(true).
+                  Foreground(lipgloss.Color("10")).
+                  Border(lipgloss.RoundedBorder()).
+                  MarginTop(10).
+                  Padding(5, 20)
+
     if d.rdata.complete {
-      return d.rdata.curr.front + "\n" + d.rdata.curr.back
+      ui = lipgloss.JoinVertical(
+        lipgloss.Left,
+        questStyle.Render(d.rdata.curr.front),
+        "",
+        d.rdata.curr.back,
+      )
     } else {
-      return d.rdata.curr.front
+      ui = lipgloss.JoinVertical(
+        lipgloss.Center,
+        questStyle.Render(d.rdata.curr.front),
+        "",
+        "",
+      )
     }
+    return cardStyle.Render(ui)
   }
   return listStyle.Render(d.cards.View())
 }

@@ -18,7 +18,8 @@ type Form struct {
   edit        bool
 }
 
-var promptStyle = lipgloss.NewStyle().Width(100).Align(lipgloss.Center).MarginTop(10)
+// var promptStyle = lipgloss.NewStyle().Width(100).Align(lipgloss.Center).MarginTop(10)
+var promptStyle = lipgloss.NewStyle().MarginLeft(60).MarginTop(10).Padding(5, 20).Align(lipgloss.Center).Border(lipgloss.RoundedBorder())
 
 func newDefaultForm() *Form {
   return NewForm("Write Question Here...", "Answer Here...")
@@ -72,8 +73,8 @@ func (f Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       }
     }
   case tea.WindowSizeMsg:
-    h, v := promptStyle.GetFrameSize()
-    promptStyle = promptStyle.Width(msg.Width - h).Height(msg.Height - v)
+    h, _ := promptStyle.GetFrameSize()
+    promptStyle = promptStyle.MarginLeft(msg.Width - msg.Width/2 - h/2)
   }
   if f.question.Focused() {
     f.question, cmd = f.question.Update(msg)
