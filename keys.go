@@ -31,6 +31,7 @@ type keyMap struct {
   Easy   key.Binding
   Medium key.Binding
   Hard   key.Binding
+  Save   key.Binding
 }
 
 var keys = keyMap{
@@ -101,5 +102,9 @@ var keys = keyMap{
   Hard: key.NewBinding(
     key.WithKeys("3"),
     key.WithHelp("3", "Card hard"),
+  ),
+  Save: key.NewBinding(
+    key.WithKeys("ctrl+s"),
+    key.WithHelp("ctrl+s", "Save cards"),
   ),
 }

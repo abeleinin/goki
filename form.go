@@ -38,8 +38,8 @@ func NewForm(question, answer string) *Form {
 }
 
 func (f Form) EditCard(card *Card) {
-  card.front = f.question.Value()
-  card.back = f.answer.Value()
+  card.Front = f.question.Value()
+  card.Back = f.answer.Value()
 }
 
 func (f Form) CreateCard() *Card {

@@ -12,7 +12,6 @@ import (
 
 var (
   listStyle = lipgloss.NewStyle().Margin(1, 2)
-  cardStyle = lipgloss.NewStyle().Align(lipgloss.Center)
 )
 
 type Status int
@@ -25,21 +24,21 @@ const (
 )
 
 type Card struct {
-  front    string 
-  back     string 
+  Front    string `json:"front"`
+  Back     string `json:"back"`
 
-  score    int
-  status   Status
-  reviewAt time.Time 
+  Score    int        `json:"score"`
+  Status   Status     `json:"status"` 
+  ReviewAt time.Time  `json:"reviewAt"`
 }
 
 func NewCard(front, back string) *Card {
   return &Card{
-    front: front,
-    back: back,
-    score: 0,
-    status: New,
-    reviewAt: time.Now(),
+    Front: front,
+    Back: back,
+    Score: 0,
+    Status: New,
+    ReviewAt: time.Now(),
   }
 }
 
@@ -52,8 +51,8 @@ type Deck struct {
   numComplete int
 
   // Deck data
-  json      string 
-  cards     list.Model
+  json      string     
+  Cards     list.Model
   rdata     ReviewData
 }
 
@@ -66,9 +65,9 @@ type ReviewData struct {
 
 func (d *Deck) UpdateStatus() {
   d.numNew, d.numLearning, d.numReview, d.numComplete = 0, 0, 0, 0
-  for _, card := range d.cards.Items() {
+  for _, card := range d.Cards.Items() {
     c := card.(*Card)
-    switch c.status {
+    switch c.Status {
     case New:
         d.numNew++
     case Learning:
@@ -85,7 +84,7 @@ func (d *Deck) StartReview() {
   d.rdata.reviewing = true
   d.rdata.complete = false
   d.rdata.currIx = 0
-  d.rdata.curr = d.cards.Items()[d.rdata.currIx].(*Card)
+  d.rdata.curr = d.Cards.Items()[d.rdata.currIx].(*Card)
 }
 
 func (d Deck) Name()        string { return d.name }
@@ -96,18 +95,15 @@ func (d Deck) NumComplete() string { return strconv.Itoa(d.numComplete) }
 
 func (d *Deck) NumNewInc()         { d.numNew++ }
 
-func (c Card) FilterValue() string { return c.front }
-func (c Card) Title()       string { return c.front }
-func (c Card) Description() string { return c.back }
+func (c Card) FilterValue() string { return c.Front }
+func (c Card) Title()       string { return c.Front }
+func (c Card) Description() string { return c.Back }
 
-func newDefaultDeck() *Deck {
-  return NewDeck("Deck Name", list.New(nil, list.NewDefaultDelegate(), 0, 0))
-}
-
-func NewDeck(name string, cards list.Model) *Deck {
+func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
   d := &Deck{
     name: name,
-    cards: cards,
+    json: jsonName,
+    Cards: list.New(lst, list.NewDefaultDelegate(), 0, 0),
   }
   d.UpdateStatus()
   return d
@@ -131,10 +127,12 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         f := newDefaultForm()
         f.edit = false
         return f.Update(nil)
+      case key.Matches(msg, keys.Save):
+        saveCards(&d)
       case key.Matches(msg, keys.Edit):
-        card := d.cards.SelectedItem().(*Card)
-        f := NewForm(card.front, card.back)
-        f.index = d.cards.Index()
+        card := d.Cards.SelectedItem().(*Card)
+        f := NewForm(card.Front, card.Back)
+        f.index = d.Cards.Index()
         f.edit = true
         return f.Update(nil)
       case key.Matches(msg, keys.Open):
@@ -142,33 +140,32 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         return d.Update(nil)
       case key.Matches(msg, keys.Easy):
         if d.rdata.complete {
-          d.rdata.curr.score = 1
-          d.rdata.curr.status = Complete
+          d.rdata.curr.Score = 1
+          d.rdata.curr.Status = Complete
           d.rdata.currIx++
           d.rdata.complete = false
         }
       case key.Matches(msg, keys.Medium):
         if d.rdata.complete {
-          d.rdata.curr.score = 0
-          d.rdata.curr.status = Learning
+          d.rdata.curr.Score = 0
+          d.rdata.curr.Status = Learning
           d.rdata.currIx++
           d.rdata.complete = false
         }
       case key.Matches(msg, keys.Hard):
         if d.rdata.complete {
-          d.rdata.curr.score = 0
-          d.rdata.curr.status = New
+          d.rdata.curr.Score = 0
+          d.rdata.curr.Status = New
           d.rdata.currIx++
           d.rdata.complete = false
         }
     }
   case tea.WindowSizeMsg:
-    h, v := cardStyle.GetFrameSize()
-    cardStyle = cardStyle.Width(msg.Width - h).Height(msg.Height - v)
-    d.cards.SetSize(msg.Width-h, msg.Height-v)
+    h, v := listStyle.GetFrameSize()
+    d.Cards.SetSize(msg.Width-h, msg.Height-v)
   }
 
-  if d.rdata.currIx > len(d.cards.Items()) - 1 {
+  if d.rdata.currIx > len(d.Cards.Items()) - 1 {
     d.rdata.reviewing = false
     d.rdata.complete = false
     i := sg_user.table.Cursor()
@@ -176,15 +173,12 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     sg_user.UpdateTable()
     return sg_user.Update(nil)
   } else {
-    d.rdata.curr = d.cards.Items()[d.rdata.currIx].(*Card)
+    d.rdata.curr = d.Cards.Items()[d.rdata.currIx].(*Card)
   }
 
-  h, v := cardStyle.GetFrameSize()
-  cardStyle = cardStyle.MarginLeft(h/2).Height(v/2)
+  d.Cards.SetSize(100, 50)
 
-  d.cards.SetSize(100, 50)
-
-  d.cards, cmd = d.cards.Update(msg)
+  d.Cards, cmd = d.Cards.Update(msg)
   return d, cmd
 }
 
@@ -195,25 +189,24 @@ func (d Deck) View() string {
                   Bold(true).
                   Foreground(lipgloss.Color("10")).
                   Border(lipgloss.RoundedBorder()).
-                  MarginTop(10).
                   Padding(5, 20)
 
     if d.rdata.complete {
       ui = lipgloss.JoinVertical(
-        lipgloss.Left,
-        questStyle.Render(d.rdata.curr.front),
+        lipgloss.Center,
+        questStyle.Render(d.rdata.curr.Front),
         "",
-        d.rdata.curr.back,
+        d.rdata.curr.Back,
       )
     } else {
       ui = lipgloss.JoinVertical(
         lipgloss.Center,
-        questStyle.Render(d.rdata.curr.front),
+        questStyle.Render(d.rdata.curr.Front),
         "",
         "",
       )
     }
-    return cardStyle.Render(ui)
+    return ui
   }
-  return listStyle.Render(d.cards.View())
+  return listStyle.Render(d.Cards.View())
 }

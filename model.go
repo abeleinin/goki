@@ -1,11 +1,6 @@
 package main
 
 import (
-  "encoding/json"
-  // "io/ioutil"
-  "log"
-  "os"
-
   "github.com/charmbracelet/bubbles/help"
   "github.com/charmbracelet/bubbles/key"
   "github.com/charmbracelet/bubbles/table"
@@ -61,31 +56,6 @@ func (u *User) Init() tea.Cmd {
   return nil
 }
 
-func (u User) writeJSON() {
-  var result map[string]map[string]string
-
-  if result == nil {
-    result = make(map[string]map[string]string)
-  }
-  if result["Questions"] == nil {
-      result["Questions"] = make(map[string]string)
-  }
-
-  // for _, card := range u.list.Items() {
-  //   result["Questions"][card.(Card).question]= card.(Card).answer
-  // }
-
-  jsonData, err := json.Marshal(result)
-  if err != nil {
-    log.Fatalf("Error serializing to JSON: %s", err)
-  }
-
-  err = os.WriteFile("result.json", jsonData, 0644)
-  if err != nil {
-    log.Fatalf("Error writing JSON to file: %s", err)
-  }
-}
-
 func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
   var cmd tea.Cmd
   switch msg := msg.(type) {
@@ -95,6 +65,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
           return u, tea.Quit
         case key.Matches(msg, keys.Enter):
           i := u.table.Cursor()
+          u.decks[i].rdata = ReviewData{}
           return u.decks[i].Update(nil)
         case key.Matches(msg, keys.Review):
           i := sg_user.table.Cursor()
@@ -102,19 +73,17 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
           return u.decks[i].Update(nil)
         case key.Matches(msg, keys.Back):
           return u.Update(nil)
-        // case key.Matches(msg, keys.Save):
-        //   u.writeJSON()
       }
     case tea.WindowSizeMsg:
       h, v := docStyle.GetFrameSize()
       docStyle = docStyle.Width(msg.Width - h).Height(msg.Height - v)
     case Form:
       i := sg_user.table.Cursor()
-      card := u.decks[i].cards.Items()[msg.index]
+      card := u.decks[i].Cards.Items()[msg.index]
       if msg.edit {
         msg.EditCard(card.(*Card))
       } else {
-        u.decks[i].cards.InsertItem(0, msg.CreateCard())
+        u.decks[i].Cards.InsertItem(0, msg.CreateCard())
         u.decks[i].NumNewInc()
       }
       return u.decks[i].Update(nil)
@@ -163,30 +132,3 @@ func (u *User) updateInputs(msg tea.Msg) tea.Cmd {
 
   return tea.Batch(cmds...)
 }
-
-// func processJSON() []list.Item {
-//   file, err := os.Open("result.json")
-//   if err != nil {
-//       log.Fatalf("Error opening file: %s", err)
-//   }
-//   defer file.Close()
-
-//   byteValue, err := ioutil.ReadAll(file)
-//   if err != nil {
-//       log.Fatalf("Error reading file: %s", err)
-//   }
-
-//   var result map[string]map[string]string
-
-//   err = json.Unmarshal(byteValue, &result)
-//   if err != nil {
-//       log.Fatalf("Error parsing JSON: %s", err)
-//   }
-
-//   cards := []list.Item{}
-//   for q, a := range result["Questions"] {
-//     cards = append(cards, Card{question: q, answer: a})
-//   }
-
-//   return cards
-// }
