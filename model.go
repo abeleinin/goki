@@ -4,7 +4,6 @@ import (
   "github.com/charmbracelet/bubbles/help"
   "github.com/charmbracelet/bubbles/key"
   "github.com/charmbracelet/bubbles/table"
-  "github.com/charmbracelet/bubbles/textinput"
   tea "github.com/charmbracelet/bubbletea"
   "github.com/charmbracelet/lipgloss"
 )
@@ -24,7 +23,6 @@ type User struct {
   id      string
   help    help.Model
   table   table.Model
-  input   []textinput.Model
   decks   []*Deck // table -> decks
 }
 
@@ -89,8 +87,6 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       return u.decks[i].Update(nil)
   }
 
-  cmd = u.updateInputs(msg)
-
   u.table, cmd = u.table.Update(msg)
 
   return u, cmd
@@ -121,14 +117,4 @@ func (u *User) View() string {
     pageLeft,
   )
   return docStyle.Render(page)
-}
-
-func (u *User) updateInputs(msg tea.Msg) tea.Cmd {
-  cmds := make([]tea.Cmd, len(u.input))
-
-  for i := range u.input {
-    u.input[i], cmds[i] = u.input[i].Update(msg)
-  }
-
-  return tea.Batch(cmds...)
 }
