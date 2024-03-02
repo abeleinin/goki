@@ -110,7 +110,7 @@ func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
     name: name,
     json: jsonName,
     Cards: list.New(lst, list.NewDefaultDelegate(), 0, 0),
-    keyMap: DefaultKeyMap(),
+    keyMap: DeckKeyMap(),
     rdata: ReviewData{},
   }
   d.UpdateStatus()
@@ -122,7 +122,6 @@ func (d Deck) Init() tea.Cmd {
 }
 
 func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-  var cmd tea.Cmd
   switch msg := msg.(type) {
   case tea.KeyMsg:
     switch {
@@ -173,19 +172,22 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     d.Cards.SetSize(msg.Width-h, msg.Height-v)
   }
 
-  if d.rdata.currIx > len(d.Cards.Items()) - 1 {
-    d.rdata.reviewing = false
-    d.rdata.complete = false
-    i := sg_user.table.Cursor()
-    sg_user.decks[i].UpdateStatus()
-    sg_user.UpdateTable()
-    return sg_user.Update(nil)
-  } else {
-    d.rdata.curr = d.Cards.Items()[d.rdata.currIx].(*Card)
+  if d.rdata.reviewing {
+    if d.rdata.currIx > len(d.Cards.Items()) - 1 {
+      d.rdata.reviewing = false
+      d.rdata.complete = false
+      i := sg_user.table.Cursor()
+      sg_user.decks[i].UpdateStatus()
+      sg_user.UpdateTable()
+      return sg_user.Update(nil)
+    } else {
+      d.rdata.curr = d.Cards.Items()[d.rdata.currIx].(*Card)
+    }
   }
 
   d.Cards.SetSize(100, 50)
 
+  var cmd tea.Cmd
   d.Cards, cmd = d.Cards.Update(msg)
   return d, cmd
 }
@@ -228,6 +230,7 @@ func (d Deck) View() string {
       )
     }
     return cardStyle.Render(questStyle.Render(ui))
+  } else {
+    return listStyle.Render(d.Cards.View())
   }
-  return listStyle.Render(d.Cards.View())
 }

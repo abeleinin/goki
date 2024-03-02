@@ -8,7 +8,7 @@ func (u User) ShortHelp() []key.Binding {
 
 func (u User) FullHelp() [][]key.Binding {
   return [][]key.Binding{
-    {u.KeyMap.Help, u.KeyMap.Quit, u.KeyMap.Up, u.KeyMap.Down},
+    {u.KeyMap.Help, u.KeyMap.Up, u.KeyMap.Down, u.KeyMap.Quit},
     {u.KeyMap.Open, u.KeyMap.New, u.KeyMap.Edit, u.KeyMap.Review},
   }
 }
@@ -47,6 +47,43 @@ type keyMap struct {
   CloseFullHelp key.Binding
 }
 
+func DeckKeyMap() keyMap {
+	return keyMap{
+    New: key.NewBinding(
+      key.WithKeys("n"),
+      key.WithHelp("n", "new card"),
+    ),
+    Edit: key.NewBinding(
+      key.WithKeys("e"),
+      key.WithHelp("e", "edit card"),
+    ),
+    Back: key.NewBinding(
+      key.WithKeys("esc"),
+      key.WithHelp("esc", "home page"),
+    ),
+    Open: key.NewBinding(
+      key.WithKeys("o"),
+      key.WithHelp("o", "view deck"),
+    ),
+    Easy: key.NewBinding(
+      key.WithKeys("1"),
+      key.WithHelp("1", "card easy"),
+    ),
+    Medium: key.NewBinding(
+      key.WithKeys("2"),
+      key.WithHelp("2", "card medium"),
+    ),
+    Hard: key.NewBinding(
+      key.WithKeys("3"),
+      key.WithHelp("3", "card hard"),
+    ),
+    Save: key.NewBinding(
+      key.WithKeys("ctrl+s"),
+      key.WithHelp("ctrl+s", "save cards"),
+    ),
+  }
+}
+
 func FormKeyMap() keyMap {
   return keyMap{
     Enter: key.NewBinding(
@@ -67,8 +104,8 @@ func FormKeyMap() keyMap {
 func DefaultKeyMap() keyMap {
 	return keyMap{
     New: key.NewBinding(
-      key.WithKeys("n"),
-      key.WithHelp("n", "new deck"),
+      key.WithKeys("N"),
+      key.WithHelp("N", "new deck"),
     ),
     Edit: key.NewBinding(
       key.WithKeys("e"),
@@ -113,22 +150,6 @@ func DefaultKeyMap() keyMap {
     Open: key.NewBinding(
       key.WithKeys("o"),
       key.WithHelp("o", "view deck"),
-    ),
-    Easy: key.NewBinding(
-      key.WithKeys("1"),
-      key.WithHelp("1", "card easy"),
-    ),
-    Medium: key.NewBinding(
-      key.WithKeys("2"),
-      key.WithHelp("2", "card medium"),
-    ),
-    Hard: key.NewBinding(
-      key.WithKeys("3"),
-      key.WithHelp("3", "card hard"),
-    ),
-    Save: key.NewBinding(
-      key.WithKeys("ctrl+s"),
-      key.WithHelp("ctrl+s", "save cards"),
     ),
     ShowFullHelp: key.NewBinding(
       key.WithKeys("?"),

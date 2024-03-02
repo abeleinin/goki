@@ -73,8 +73,8 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
           return u.decks[i].Update(nil)
         case key.Matches(msg, u.KeyMap.New):
           newDeck := NewDeck("New Deck", "new.json", []list.Item{})
-          sg_user.decks = append(sg_user.decks, newDeck)
-          sg_user.table.SetRows(updateRows())
+          u.decks = append(u.decks, newDeck)
+          u.table.SetRows(updateRows())
         case key.Matches(msg, u.KeyMap.Back):
           return u.Update(nil)
         case key.Matches(msg, u.KeyMap.ShowFullHelp):
@@ -87,8 +87,8 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       docStyle = docStyle.Width(msg.Width - h).Height(msg.Height - v)
     case Form:
       i := sg_user.table.Cursor()
-      card := u.decks[i].Cards.Items()[msg.index]
       if msg.edit {
+        card := u.decks[i].Cards.Items()[msg.index]
         msg.EditCard(card.(*Card))
       } else {
         u.decks[i].Cards.InsertItem(0, msg.CreateCard())
