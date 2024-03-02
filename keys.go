@@ -23,6 +23,18 @@ func (f Form) FullHelp() [][]key.Binding {
   }
 }
 
+func (d Deck) ShortHelp() []key.Binding {
+  return []key.Binding{d.keyMap.Easy, d.keyMap.Medium, d.keyMap.Hard}
+}
+
+func (d Deck) FullHelp() [][]key.Binding {
+  return [][]key.Binding{
+    {d.keyMap.New, d.keyMap.Edit, d.keyMap.Delete, d.keyMap.Up},
+    {d.keyMap.Down, d.keyMap.Enter, d.keyMap.Help, d.keyMap.Quit}, 
+    {d.keyMap.Back, d.keyMap.Tab, d.keyMap.Review, d.keyMap.Open},
+  }
+}
+
 type keyMap struct {
   New    key.Binding
   Edit   key.Binding
@@ -63,19 +75,19 @@ func DeckKeyMap() keyMap {
     ),
     Open: key.NewBinding(
       key.WithKeys("o"),
-      key.WithHelp("o", "view deck"),
+      key.WithHelp("o", "view back"),
     ),
     Easy: key.NewBinding(
       key.WithKeys("1"),
-      key.WithHelp("1", "card easy"),
+      key.WithHelp("1", "easy"),
     ),
     Medium: key.NewBinding(
       key.WithKeys("2"),
-      key.WithHelp("2", "card medium"),
+      key.WithHelp("2", "medium"),
     ),
     Hard: key.NewBinding(
       key.WithKeys("3"),
-      key.WithHelp("3", "card hard"),
+      key.WithHelp("3", "hard"),
     ),
     Save: key.NewBinding(
       key.WithKeys("ctrl+s"),

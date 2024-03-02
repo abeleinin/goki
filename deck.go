@@ -6,6 +6,7 @@ import (
   "time"
   "strconv"
 
+  "github.com/charmbracelet/bubbles/help"
   "github.com/charmbracelet/bubbles/list"
   "github.com/charmbracelet/bubbles/key"
   tea "github.com/charmbracelet/bubbletea"
@@ -48,6 +49,7 @@ func NewCard(front, back string) *Card {
 
 type Deck struct {
   keyMap keyMap
+  help   help.Model
 
   // Deck table information
   name        string 
@@ -110,12 +112,14 @@ func (c Card) Description() string { return c.Back }
 
 func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
   d := &Deck{
+    help: help.New(),
     name: name,
     json: jsonName,
     Cards: list.New(lst, list.NewDefaultDelegate(), 0, 0),
     keyMap: DeckKeyMap(),
     rdata: ReviewData{},
   }
+  d.help.ShowAll = false
   d.UpdateStatus()
   return d
 }
@@ -133,16 +137,22 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       case key.Matches(msg, d.keyMap.Back):
         return sg_user.Update(d)
       case key.Matches(msg, d.keyMap.New):
-        f := newDefaultForm()
-        f.edit = false
-        return f.Update(nil)
+        if !d.rdata.reviewing {
+          f := newDefaultForm()
+          f.edit = false
+          return f.Update(nil)
+        }
       case key.Matches(msg, d.keyMap.Delete):
-        d.Cards.RemoveItem(d.Cards.Index())
-        return d.Update(nil)
+        if !d.rdata.reviewing {
+          d.Cards.RemoveItem(d.Cards.Index())
+          return d.Update(nil)
+        }
       case key.Matches(msg, d.keyMap.Save):
-        saveCards(&d)
+        if !d.rdata.reviewing {
+          saveCards(&d)
+        }
       case key.Matches(msg, d.keyMap.Edit):
-        if len(d.Cards.Items()) > 0 {
+        if !d.rdata.reviewing && len(d.Cards.Items()) > 0 {
           card := d.Cards.SelectedItem().(*Card)
           f := EditForm(card.Front, card.Back)
           f.index = d.Cards.Index()
@@ -200,44 +210,57 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (d Deck) View() string {
+  fd := int(os.Stdout.Fd())
+  width, height, err := term.GetSize(fd)
+  if err != nil {
+      fmt.Println("Error getting size:", err)
+  }
   if d.rdata.reviewing {
-
-    fd := int(os.Stdout.Fd())
-    width, height, err := term.GetSize(fd)
-    if err != nil {
-        fmt.Println("Error getting size:", err)
-    }
     cardStyle := lipgloss.NewStyle().
                   Align(lipgloss.Center).
                   Width(width).
                   Height(height)
 
-    var ui string
     questStyle := lipgloss.NewStyle().
                   Bold(true).
                   Foreground(lipgloss.Color("10")).
                   Border(lipgloss.RoundedBorder()).
-                  Padding(5, 20)
-    ansStyle := lipgloss.NewStyle().
-                Foreground(lipgloss.Color("12"))
+                  Padding(5, 20, 0, 20)
 
+    ansStyle := lipgloss.NewStyle().
+                Foreground(lipgloss.Color("15")).
+                Margin(0, 0, 1, 0)
+
+    footerStyle := lipgloss.NewStyle().MarginTop(3)
+
+    var footer string
     if d.rdata.complete {
-      ui = lipgloss.JoinVertical(
+      footerStyle = footerStyle.MarginTop(1)
+      footer = lipgloss.JoinVertical(
         lipgloss.Center,
-        d.rdata.curr.Front,
-        "",
         ansStyle.Render(d.rdata.curr.Back),
+        d.help.Styles.ShortKey.Inline(true).Render("Card Difficulty:"),
+        lipgloss.NewStyle().Inline(true).Render(d.help.View(d)),
       )
     } else {
-      ui = lipgloss.JoinVertical(
+      key := d.help.Styles.ShortKey.Inline(true).Render(d.keyMap.Open.Help().Key) 
+      sep := d.help.Styles.ShortSeparator.Inline(true).Render(d.help.ShortSeparator)
+      desc := d.help.Styles.ShortDesc.Inline(true).Render(d.keyMap.Open.Help().Desc)
+      footer = lipgloss.JoinVertical(
         lipgloss.Center,
-        d.rdata.curr.Front,
-        "",
-        "",
+        key + sep + desc,
       )
     }
+
+    ui := lipgloss.JoinVertical(
+      lipgloss.Center,
+      d.rdata.curr.Front,
+      footerStyle.Render(footer),
+    )
     return cardStyle.Render(questStyle.Render(ui))
   } else {
+    h, v := listStyle.GetFrameSize()
+    d.Cards.SetSize(width-h, height-v)
     return listStyle.Render(d.Cards.View())
   }
 }
