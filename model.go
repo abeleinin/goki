@@ -13,12 +13,7 @@ import (
 var (
   focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
   blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
-  cursorStyle         = focusedStyle.Copy()
-  noStyle             = lipgloss.NewStyle()
-  helpStyle           = blurredStyle.Copy()
-  cursorModeHelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
-
-  docStyle = lipgloss.NewStyle().Width(100).Height(100).Align(lipgloss.Center)
+  docStyle            = lipgloss.NewStyle().Width(100).Height(100).Align(lipgloss.Center)
 )
 
 type User struct {
@@ -28,6 +23,7 @@ type User struct {
   table   table.Model
   input   textinput.Model
   decks   []*Deck
+  del     bool
 }
 
 func (u *User) UpdateTable() {
@@ -41,7 +37,7 @@ func (u *User) UpdateTable() {
                                     u.decks[i].NumNew(), 
                                     u.decks[i].NumLearning(),
                                     u.decks[i].NumReview()})
-    } else {
+    } else if currRows[j] != nil {
       rows = append(rows, currRows[j])
     }
   }
@@ -51,7 +47,11 @@ func (u *User) UpdateTable() {
 func NewUser() *User {
 	help := help.New()
 	help.ShowAll = false
-	return &User{help: help, KeyMap: DefaultKeyMap(),}
+	return &User{
+    help: help, 
+    KeyMap: DefaultKeyMap(),
+    del: false,
+  }
 }
 
 func (u *User) Init() tea.Cmd {
@@ -85,12 +85,21 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
             u.decks = append(u.decks, newDeck)
             u.table.SetRows(updateRows())
           }
+        case key.Matches(msg, u.KeyMap.Delete):
+          if !u.input.Focused() {
+            u.del = true
+            u.table.Blur()
+            u.input.Focus()
+            u.input.PromptStyle = focusedStyle
+            return u, nil
+          }
         case key.Matches(msg, u.KeyMap.Back):
           if u.input.Focused() {
             u.input.PromptStyle = blurredStyle
             u.input.Blur()
             u.table.Focus()
             u.input.SetValue("")
+            u.del = false
           }
           return u.Update(nil)
         case key.Matches(msg, u.KeyMap.ShowFullHelp):
@@ -110,9 +119,17 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
           if u.input.Focused() {
             s := u.input.Value()
             i := u.table.Cursor()
-            u.decks[i].name = s
-            u.decks[i].Cards.Title = s
-            u.UpdateTable()
+            if u.del {
+              if s == "yes" {
+                u.decks = append(u.decks[:i], u.decks[i+1:]...)
+                u.table.SetRows(updateRows())
+              }
+            } else {
+              u.decks[i].name = s
+              u.decks[i].Cards.Title = s
+              u.UpdateTable()
+            }
+            u.del = false
             u.input.Blur()
             u.table.Focus()
             u.input.SetValue("")
@@ -152,7 +169,7 @@ func (u *User) View() string {
   logoStyle := lipgloss.NewStyle().
                 Bold(true).
                 MarginBottom(1)
-  helpStyle := lipgloss.NewStyle().Align(lipgloss.Left).Width(58)
+  footerStyle := lipgloss.NewStyle().Align(lipgloss.Left).Width(58)
 
   gokiLogo := `   ________        __    __  
   /  _____/  ____ |  | _|__|
@@ -160,13 +177,25 @@ func (u *User) View() string {
  \    \_\  |  /\  |    <|  |
   \______  /\____/|__|_ \__|
          \/            \/   `
-
-  pageLeft := lipgloss.JoinVertical(
-    lipgloss.Center,
-    u.table.View(),
-    helpStyle.Render(u.input.View()),
-    helpStyle.Render(u.help.View(u)),
-  )
+  
+  var pageLeft string
+  if u.del {
+    pageLeft = lipgloss.JoinVertical(
+      lipgloss.Center,
+      u.table.View(),
+      footerStyle.Render("Type 'yes' to confirm deletion:"),
+      footerStyle.Render(u.input.View()),
+      footerStyle.Render(u.help.View(u)),
+    )
+  } else {
+    pageLeft = lipgloss.JoinVertical(
+      lipgloss.Center,
+      u.table.View(),
+      "",
+      footerStyle.Render(u.input.View()),
+      footerStyle.Render(u.help.View(u)),
+    )
+  }
 
   page := lipgloss.JoinVertical(
     lipgloss.Center,
