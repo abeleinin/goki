@@ -26,6 +26,10 @@ type User struct {
   del     bool
 }
 
+func (u *User) Decks() []*Deck {
+  return u.decks
+}
+
 func (u *User) UpdateTable() {
   i := u.table.Cursor()
   currRows := u.table.Rows()
@@ -33,7 +37,7 @@ func (u *User) UpdateTable() {
   rows := []table.Row{}
   for j, _ := range currRows {
     if j == i {
-      rows = append(rows, table.Row{u.decks[i].Name(), 
+      rows = append(rows, table.Row{u.decks[i].Name, 
                                     u.decks[i].NumNew(), 
                                     u.decks[i].NumLearning(),
                                     u.decks[i].NumReview()})
@@ -65,6 +69,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       switch {
         case key.Matches(msg, u.KeyMap.Quit):
           if !u.input.Focused() {
+            saveAll()
             return u, tea.Quit
           }
         case key.Matches(msg, u.KeyMap.Open):
@@ -125,7 +130,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
                 u.table.SetRows(updateRows())
               }
             } else {
-              u.decks[i].name = s
+              u.decks[i].Name = s
               u.decks[i].Cards.Title = s
               u.UpdateTable()
             }

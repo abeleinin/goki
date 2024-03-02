@@ -55,16 +55,16 @@ type Deck struct {
   searching     bool
 
   // Deck table information
-  name        string 
+  Name        string `json:"name"`
   numNew      int
   numLearning int
   numReview   int
   numComplete int
 
   // Deck data
-  json      string     
-  Cards     list.Model
-  rdata     ReviewData
+  Json      string `json:"json"`
+  Cards     list.Model `json:"-"`
+  rdata     ReviewData `json:"-"`
 }
 
 type ReviewData struct {
@@ -103,7 +103,6 @@ func (d *Deck) StartReview() {
   d.rdata.curr = d.Cards.Items()[d.rdata.currIx].(*Card)
 }
 
-func (d Deck) Name()        string { return d.name }
 func (d Deck) NumNew()      string { return strconv.Itoa(d.numNew) }
 func (d Deck) NumLearning() string { return strconv.Itoa(d.numLearning) }
 func (d Deck) NumReview()   string { return strconv.Itoa(d.numReview) }
@@ -116,8 +115,8 @@ func (c Card) Description() string { return c.Back }
 func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
   d := &Deck{
     help: help.New(),
-    name: name,
-    json: jsonName,
+    Name: name,
+    Json: jsonName,
     Cards: list.New(lst, InitCustomDelegate(), 0, 0),
     keyMap: DeckKeyMap(),
     rdata: ReviewData{},

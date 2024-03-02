@@ -14,8 +14,8 @@ import (
 func updateRows() []table.Row {
   rows := []table.Row{}
   for _, deck := range sg_user.decks {
-    deck.Cards.Title = deck.Name()
-    rows = append(rows, table.Row{deck.Name(), 
+    deck.Cards.Title = deck.Name
+    rows = append(rows, table.Row{deck.Name, 
                                   deck.NumNew(), 
                                   deck.NumLearning(),
                                   deck.NumReview()})
@@ -82,12 +82,66 @@ func initCards(saveCards bool) {
   }
 }
 
+func saveAll() {
+  saveDecks()
+  for _, deck := range sg_user.decks {
+    saveCards(deck)
+  }
+}
+
+func saveDecks() {
+  jsonData, err := json.Marshal(sg_user.Decks())
+  if err != nil {
+      log.Fatal(err)
+  }
+  err = os.WriteFile("./decks/alldecks.json", jsonData, 0644)
+}
+
 func saveCards(d *Deck) {
   jsonData, err := json.Marshal(d.Cards.Items())
   if err != nil {
       log.Fatal(err)
   }
-  err = os.WriteFile("./cards/" + d.json, jsonData, 0644)
+  err = os.WriteFile("./cards/" + d.Json, jsonData, 0644)
+}
+
+func loadDecks() {
+  d := readDecks("./decks/alldecks.json")
+  for _, curr := range d {
+    cards := readCards("./cards/" + curr.Json)
+    deck := NewDeck(curr.Name, curr.Json, cards)
+    sg_user.decks = append(sg_user.decks, deck)
+  }
+}
+
+func readDecks(fileName string) []*Deck {
+  file, err := os.Open(fileName)
+  if err != nil {
+      log.Fatalf("Error opening file: %s", err)
+  }
+  defer file.Close()
+
+  byteValue, err := ioutil.ReadAll(file)
+  if err != nil {
+      log.Fatalf("Error reading file: %s", err)
+  }
+
+  var jsonDecks []Deck
+  err = json.Unmarshal(byteValue, &jsonDecks)
+  if err != nil {
+      log.Fatalf("Error parsing JSON: %s", err)
+  }
+
+  decks := []*Deck{}
+  for _, jsonDeck := range jsonDecks {
+    deck := Deck{
+      Name: jsonDeck.Name,
+      Json: jsonDeck.Json,
+    }
+    decks = append(decks, &deck)
+  }
+
+  return decks
 }
 
 func readCards(fileName string) []list.Item {

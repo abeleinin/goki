@@ -15,13 +15,14 @@ func main() {
 
   initCards(true)
 
-  mathDeck := NewDeck("Math", "math.json", mathCards)
-  aboutDeck := NewDeck("About Me", "about.json", aboutCards)
-  quizDeck := NewDeck("Quiz", "test.json", quizCards)
+  loadDecks()
+  // mathDeck := NewDeck("Math", "math.json", mathCards)
+  // aboutDeck := NewDeck("About Me", "about.json", aboutCards)
+  // quizDeck := NewDeck("Quiz", "test.json", quizCards)
 
-  sg_user.decks = append(sg_user.decks, mathDeck)
-  sg_user.decks = append(sg_user.decks, aboutDeck)
-  sg_user.decks = append(sg_user.decks, quizDeck)
+  // sg_user.decks = append(sg_user.decks, mathDeck)
+  // sg_user.decks = append(sg_user.decks, aboutDeck)
+  // sg_user.decks = append(sg_user.decks, quizDeck)
 
   initTable()
 
