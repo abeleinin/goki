@@ -71,19 +71,24 @@ type ReviewData struct {
 
 func (d *Deck) UpdateStatus() {
   d.numNew, d.numLearning, d.numReview, d.numComplete = 0, 0, 0, 0
+  temp := []list.Item{}
   for _, card := range d.Cards.Items() {
-    c := card.(*Card)
-    switch c.Status {
-    case New:
-        d.numNew++
-    case Learning:
-        d.numLearning++
-    case Review:
-        d.numReview++
-    case Complete:
-        d.numComplete++
+    if card != nil {
+      c := card.(*Card)
+      switch c.Status {
+      case New:
+          d.numNew++
+      case Learning:
+          d.numLearning++
+      case Review:
+          d.numReview++
+      case Complete:
+          d.numComplete++
+      }
+      temp = append(temp, c)
     }
   }
+  d.Cards.SetItems(temp)
 }
 
 func (d *Deck) StartReview() {
@@ -98,8 +103,6 @@ func (d Deck) NumNew()      string { return strconv.Itoa(d.numNew) }
 func (d Deck) NumLearning() string { return strconv.Itoa(d.numLearning) }
 func (d Deck) NumReview()   string { return strconv.Itoa(d.numReview) }
 func (d Deck) NumComplete() string { return strconv.Itoa(d.numComplete) }
-
-func (d *Deck) NumNewInc()         { d.numNew++ }
 
 func (c Card) FilterValue() string { return c.Front }
 func (c Card) Title()       string { return c.Front }
@@ -128,20 +131,24 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       case key.Matches(msg, d.keyMap.Quit):
         return d, tea.Quit
       case key.Matches(msg, d.keyMap.Back):
-        sg_user.UpdateTable()
-        return sg_user.Update(nil)
+        return sg_user.Update(d)
       case key.Matches(msg, d.keyMap.New):
         f := newDefaultForm()
         f.edit = false
         return f.Update(nil)
+      case key.Matches(msg, d.keyMap.Delete):
+        d.Cards.RemoveItem(d.Cards.Index())
+        return d.Update(nil)
       case key.Matches(msg, d.keyMap.Save):
         saveCards(&d)
       case key.Matches(msg, d.keyMap.Edit):
-        card := d.Cards.SelectedItem().(*Card)
-        f := NewForm(card.Front, card.Back)
-        f.index = d.Cards.Index()
-        f.edit = true
-        return f.Update(nil)
+        if len(d.Cards.Items()) > 0 {
+          card := d.Cards.SelectedItem().(*Card)
+          f := NewForm(card.Front, card.Back)
+          f.index = d.Cards.Index()
+          f.edit = true
+          return f.Update(nil)
+        }
       case key.Matches(msg, d.keyMap.Open):
         d.rdata.complete = true
         return d.Update(nil)

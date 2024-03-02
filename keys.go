@@ -81,6 +81,10 @@ func DeckKeyMap() keyMap {
       key.WithKeys("ctrl+s"),
       key.WithHelp("ctrl+s", "save cards"),
     ),
+    Delete: key.NewBinding(
+      key.WithKeys("d"),
+      key.WithHelp("d", "delete card"),
+    ),
   }
 }
 

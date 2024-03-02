@@ -25,7 +25,7 @@ type User struct {
   help    help.Model
   KeyMap  keyMap
   table   table.Model
-  decks   []*Deck // table -> decks
+  decks   []*Deck
 }
 
 func (u *User) UpdateTable() {
@@ -92,9 +92,14 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         msg.EditCard(card.(*Card))
       } else {
         u.decks[i].Cards.InsertItem(0, msg.CreateCard())
-        u.decks[i].NumNewInc()
+        u.decks[i].UpdateStatus()
       }
       return u.decks[i].Update(nil)
+    case Deck:
+      i := sg_user.table.Cursor()
+      u.decks[i].UpdateStatus()
+      u.UpdateTable()
+      return u.Update(nil)
   }
 
   u.table, cmd = u.table.Update(msg)
