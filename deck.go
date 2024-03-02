@@ -144,7 +144,7 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       case key.Matches(msg, d.keyMap.Edit):
         if len(d.Cards.Items()) > 0 {
           card := d.Cards.SelectedItem().(*Card)
-          f := NewForm(card.Front, card.Back)
+          f := EditForm(card.Front, card.Back)
           f.index = d.Cards.Index()
           f.edit = true
           return f.Update(nil)

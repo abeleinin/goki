@@ -27,7 +27,6 @@ func main() {
 
   sg_user.input = textinput.New()
   sg_user.input.Placeholder = ""
-  sg_user.input.PromptStyle = blurredStyle
   sg_user.input.CharLimit = 20
   p := tea.NewProgram(sg_user, tea.WithAltScreen())
 

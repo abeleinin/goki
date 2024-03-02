@@ -45,6 +45,20 @@ func NewForm(question, answer string) *Form {
   return &fc
 }
 
+func EditForm(question, answer string) *Form {
+  fc := Form{
+    help:       help.New(),
+    question:   textinput.New(),
+    answer:     textinput.New(),
+    keyMap:     FormKeyMap(),
+  }
+  fc.help.ShowAll = false
+  fc.question.SetValue(question)
+  fc.answer.SetValue(answer)
+  fc.question.Focus()
+  return &fc
+}
+
 func (f Form) EditCard(card *Card) {
   card.Front = f.question.Value()
   card.Back = f.answer.Value()

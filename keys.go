@@ -149,7 +149,7 @@ func DefaultKeyMap() keyMap {
     ),
     Review: key.NewBinding(
       key.WithKeys("r"),
-      key.WithHelp("r", "review selected deck"),
+      key.WithHelp("r", "review deck"),
     ),
     Open: key.NewBinding(
       key.WithKeys("o"),

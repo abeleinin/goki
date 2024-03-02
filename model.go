@@ -12,7 +12,7 @@ import (
 
 var (
   focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
-  blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("0"))
+  blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
   cursorStyle         = focusedStyle.Copy()
   noStyle             = lipgloss.NewStyle()
   helpStyle           = blurredStyle.Copy()
@@ -107,15 +107,17 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
             return u, nil
           }
         case key.Matches(msg, u.KeyMap.Enter):
-          s := u.input.Value()
-          i := u.table.Cursor()
-          u.decks[i].name = s
-          u.decks[i].Cards.Title = s
-          u.UpdateTable()
-          u.input.Blur()
-          u.table.Focus()
-          u.input.SetValue("")
-          u.input.PromptStyle = blurredStyle
+          if u.input.Focused() {
+            s := u.input.Value()
+            i := u.table.Cursor()
+            u.decks[i].name = s
+            u.decks[i].Cards.Title = s
+            u.UpdateTable()
+            u.input.Blur()
+            u.table.Focus()
+            u.input.SetValue("")
+            u.input.PromptStyle = blurredStyle
+          }
       }
     case tea.WindowSizeMsg:
       h, v := docStyle.GetFrameSize()
@@ -149,7 +151,6 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (u *User) View() string {
   logoStyle := lipgloss.NewStyle().
                 Bold(true).
-                Foreground(lipgloss.Color("0")).
                 MarginBottom(1)
   helpStyle := lipgloss.NewStyle().Align(lipgloss.Left).Width(58)
 
