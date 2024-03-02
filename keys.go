@@ -35,14 +35,22 @@ func (d Deck) FullHelp() [][]key.Binding {
   }
 }
 
+func (c Card) ShortHelp() []key.Binding {
+  return []key.Binding{cardKeyMap.Open, cardKeyMap.Back}
+}
+
+func (c Card) FullHelp() [][]key.Binding {
+  return [][]key.Binding{
+    {cardKeyMap.Open, cardKeyMap.Back},
+  }
+}
+
 type keyMap struct {
   New    key.Binding
   Edit   key.Binding
   Delete key.Binding
   Up     key.Binding
   Down   key.Binding
-  Right  key.Binding
-  Left   key.Binding
   Enter  key.Binding
   Help   key.Binding
   Quit   key.Binding
@@ -58,6 +66,17 @@ type keyMap struct {
 
   ShowFullHelp  key.Binding
   CloseFullHelp key.Binding
+}
+
+var cardKeyMap = keyMap{
+  Back: key.NewBinding(
+    key.WithKeys("esc"),
+    key.WithHelp("esc", "previous page"),
+  ),
+  Open: key.NewBinding(
+    key.WithKeys("o"),
+    key.WithHelp("o", "show back"),
+  ),
 }
 
 func DeckKeyMap() keyMap {
@@ -76,7 +95,7 @@ func DeckKeyMap() keyMap {
     ),
     Open: key.NewBinding(
       key.WithKeys("o"),
-      key.WithHelp("o", "view back"),
+      key.WithHelp("o", "hide/show description"),
     ),
     Easy: key.NewBinding(
       key.WithKeys("1"),

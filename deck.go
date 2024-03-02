@@ -50,8 +50,9 @@ func NewCard(front, back string) *Card {
 type Deck struct {
   keyMap keyMap
   help   help.Model
-  descShown bool
-  searching bool
+  descShown     bool
+  resultsShown  bool
+  searching     bool
 
   // Deck table information
   name        string 
@@ -121,7 +122,9 @@ func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
     keyMap: DeckKeyMap(),
     rdata: ReviewData{},
   }
-  d.Cards.SetShowHelp(false)
+  d.Cards.AdditionalFullHelpKeys = func() []key.Binding {
+    return []key.Binding{d.keyMap.Edit, d.keyMap.Delete, d.keyMap.New, d.keyMap.Open, d.keyMap.Save}
+  }
   d.searching = false
   d.descShown = true
   d.help.ShowAll = false
@@ -142,7 +145,11 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
           return d, tea.Quit
         }
       case key.Matches(msg, d.keyMap.Back):
-        return sg_user.Update(d)
+        if d.resultsShown {
+          d.resultsShown = false
+        } else {
+          return sg_user.Update(d)
+        }
       case key.Matches(msg, d.keyMap.New):
         if !d.searching && !d.rdata.reviewing {
           f := newDefaultForm()
@@ -170,7 +177,6 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       case key.Matches(msg, d.keyMap.Search):
         if !d.searching {
           d.searching = true
-          // listStyle = listStyle.Align(lipgloss.Left)
         }
       case key.Matches(msg, d.keyMap.Open):
         if !d.searching {
@@ -211,6 +217,7 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       case key.Matches(msg, d.keyMap.Enter):
         if d.searching {
           d.searching = false
+          d.resultsShown = true
         }
     }
   case tea.WindowSizeMsg:
@@ -274,7 +281,7 @@ func (d Deck) View() string {
     } else {
       footer = lipgloss.JoinVertical(
         lipgloss.Center,
-        helpKeyColor.Render(d.keyMap.Open.Help().Key) + helpSep + helpDescColor.Render(d.keyMap.Open.Help().Desc),
+        d.help.View(d.rdata.curr),
       )
     }
 

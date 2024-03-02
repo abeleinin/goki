@@ -8,7 +8,6 @@ import (
 
 const (
   bullet   = "•"
-  ellipsis = "…"
 )
 
 var (
@@ -17,7 +16,6 @@ var (
   // Styles
   h = help.New()
   helpKeyColor  = h.Styles.ShortKey.Inline(true)
-  helpSep       = h.Styles.ShortSeparator.Inline(true).Render(h.ShortSeparator)
   helpDescColor = h.Styles.ShortDesc.Inline(true)
 )
 
