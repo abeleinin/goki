@@ -4,6 +4,7 @@ import (
   "fmt"
   "os"
 
+  "github.com/charmbracelet/bubbles/textinput"
   tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -24,6 +25,10 @@ func main() {
 
   initTable()
 
+  sg_user.input = textinput.New()
+  sg_user.input.Placeholder = ""
+  sg_user.input.PromptStyle = blurredStyle
+  sg_user.input.CharLimit = 20
   p := tea.NewProgram(sg_user, tea.WithAltScreen())
 
   if _, err := p.Run(); err != nil {

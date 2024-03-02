@@ -2,6 +2,7 @@ package main
 
 import (
   "github.com/charmbracelet/bubbles/list"
+  "github.com/charmbracelet/bubbles/textinput"
   "github.com/charmbracelet/bubbles/help"
   "github.com/charmbracelet/bubbles/key"
   "github.com/charmbracelet/bubbles/table"
@@ -10,8 +11,8 @@ import (
 )
 
 var (
-  focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-  blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+  focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
+  blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("0"))
   cursorStyle         = focusedStyle.Copy()
   noStyle             = lipgloss.NewStyle()
   helpStyle           = blurredStyle.Copy()
@@ -25,6 +26,7 @@ type User struct {
   help    help.Model
   KeyMap  keyMap
   table   table.Model
+  input   textinput.Model
   decks   []*Deck
 }
 
@@ -62,25 +64,55 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     case tea.KeyMsg:
       switch {
         case key.Matches(msg, u.KeyMap.Quit):
-          return u, tea.Quit
+          if !u.input.Focused() {
+            return u, tea.Quit
+          }
         case key.Matches(msg, u.KeyMap.Open):
-          i := u.table.Cursor()
-          u.decks[i].rdata = ReviewData{}
-          return u.decks[i].Update(nil)
+          if !u.input.Focused() {
+            i := u.table.Cursor()
+            u.decks[i].rdata = ReviewData{}
+            return u.decks[i].Update(nil)
+          }
         case key.Matches(msg, u.KeyMap.Review):
-          i := sg_user.table.Cursor()
-          u.decks[i].StartReview()
-          return u.decks[i].Update(nil)
+          if !u.input.Focused() {
+            i := sg_user.table.Cursor()
+            u.decks[i].StartReview()
+            return u.decks[i].Update(nil)
+          }
         case key.Matches(msg, u.KeyMap.New):
-          newDeck := NewDeck("New Deck", "new.json", []list.Item{})
-          u.decks = append(u.decks, newDeck)
-          u.table.SetRows(updateRows())
+          if !u.input.Focused() {
+            newDeck := NewDeck("New Deck", "new.json", []list.Item{})
+            u.decks = append(u.decks, newDeck)
+            u.table.SetRows(updateRows())
+          }
         case key.Matches(msg, u.KeyMap.Back):
+          if u.input.Focused() {
+            u.input.PromptStyle = blurredStyle
+            u.input.Blur()
+            u.table.Focus()
+            u.input.SetValue("")
+          }
           return u.Update(nil)
         case key.Matches(msg, u.KeyMap.ShowFullHelp):
           fallthrough
         case key.Matches(msg, u.KeyMap.CloseFullHelp):
-          u.help.ShowAll = !u.help.ShowAll
+          if !u.input.Focused() {
+            u.help.ShowAll = !u.help.ShowAll
+          }
+        case key.Matches(msg, u.KeyMap.Edit):
+          u.table.Blur()
+          u.input.Focus()
+          u.input.PromptStyle = focusedStyle
+        case key.Matches(msg, u.KeyMap.Enter):
+          s := u.input.Value()
+          i := u.table.Cursor()
+          u.decks[i].name = s
+          u.decks[i].Cards.Title = s
+          u.UpdateTable()
+          u.input.Blur()
+          u.table.Focus()
+          u.input.SetValue("")
+          u.input.PromptStyle = blurredStyle
       }
     case tea.WindowSizeMsg:
       h, v := docStyle.GetFrameSize()
@@ -102,8 +134,12 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       return u.Update(nil)
   }
 
-  u.table, cmd = u.table.Update(msg)
+  if u.input.Focused() {
+    u.input, cmd = u.input.Update(msg)
+    return u, cmd
+  }
 
+  u.table, cmd = u.table.Update(msg)
   return u, cmd
 }
 
@@ -123,13 +159,14 @@ func (u *User) View() string {
 
   pageLeft := lipgloss.JoinVertical(
     lipgloss.Center,
-    u.table.View(),             // Render the table
+    u.table.View(),
+    helpStyle.Render(u.input.View()),
     helpStyle.Render(u.help.View(u)),
   )
 
   page := lipgloss.JoinVertical(
-    lipgloss.Center,            // Center page
-    logoStyle.Render(gokiLogo), // Render the logo
+    lipgloss.Center,
+    logoStyle.Render(gokiLogo),
     pageLeft,
     "",
   )
