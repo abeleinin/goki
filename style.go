@@ -1,6 +1,7 @@
 package main
 
 import (
+  "github.com/charmbracelet/bubbles/help"
   "github.com/charmbracelet/bubbles/list"
   "github.com/charmbracelet/lipgloss"
 )
@@ -10,7 +11,15 @@ const (
   ellipsis = "…"
 )
 
-var delegate *list.DefaultDelegate
+var (
+  delegate *list.DefaultDelegate
+
+  // Styles
+  h = help.New()
+  helpKeyColor  = h.Styles.ShortKey.Inline(true)
+  helpSep       = h.Styles.ShortSeparator.Inline(true).Render(h.ShortSeparator)
+  helpDescColor = h.Styles.ShortDesc.Inline(true)
+)
 
 func InitCustomDelegate() list.DefaultDelegate {
   temp := list.DefaultDelegate{}
@@ -31,12 +40,10 @@ func ViewFalseDescription() {
 }
 
 func CustomItemStyles() (s list.DefaultItemStyles) {
-  s.NormalTitle = lipgloss.NewStyle().
-    Foreground(lipgloss.AdaptiveColor{Light: "#1a1a1a", Dark: "#dddddd"}).
+  s.NormalTitle = helpKeyColor.
     Padding(0, 0, 0, 1)
 
-  s.NormalDesc = s.NormalTitle.Copy().
-    Foreground(lipgloss.AdaptiveColor{Light: "#A49FA5", Dark: "#777777"}).
+  s.NormalDesc = helpDescColor.
     Padding(0, 0, 0, 1)
 
   s.SelectedTitle = lipgloss.NewStyle().

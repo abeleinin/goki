@@ -16,7 +16,7 @@ import (
 )
 
 var (
-  listStyle = lipgloss.NewStyle().Margin(1, 2)
+  listStyle = lipgloss.NewStyle().Align(lipgloss.Left).MarginLeft(40).Padding(2)
 )
 
 type Status int
@@ -51,6 +51,7 @@ type Deck struct {
   keyMap keyMap
   help   help.Model
   descShown bool
+  searching bool
 
   // Deck table information
   name        string 
@@ -120,6 +121,8 @@ func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
     keyMap: DeckKeyMap(),
     rdata: ReviewData{},
   }
+  d.Cards.SetShowHelp(false)
+  d.searching = false
   d.descShown = true
   d.help.ShowAll = false
   d.UpdateStatus()
@@ -135,45 +138,55 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
   case tea.KeyMsg:
     switch {
       case key.Matches(msg, d.keyMap.Quit):
-        return d, tea.Quit
+        if !d.searching {
+          return d, tea.Quit
+        }
       case key.Matches(msg, d.keyMap.Back):
         return sg_user.Update(d)
       case key.Matches(msg, d.keyMap.New):
-        if !d.rdata.reviewing {
+        if !d.searching && !d.rdata.reviewing {
           f := newDefaultForm()
           f.edit = false
           return f.Update(nil)
         }
       case key.Matches(msg, d.keyMap.Delete):
-        if !d.rdata.reviewing {
+        if !d.searching && !d.rdata.reviewing {
           d.Cards.RemoveItem(d.Cards.Index())
           return d.Update(nil)
         }
       case key.Matches(msg, d.keyMap.Save):
-        if !d.rdata.reviewing {
+        if !d.searching && !d.rdata.reviewing {
           saveCards(&d)
         }
       case key.Matches(msg, d.keyMap.Edit):
-        if !d.rdata.reviewing && len(d.Cards.Items()) > 0 {
+        if !d.searching && !d.rdata.reviewing && len(d.Cards.Items()) > 0 {
           card := d.Cards.SelectedItem().(*Card)
           f := EditForm(card.Front, card.Back)
           f.index = d.Cards.Index()
           f.edit = true
           return f.Update(nil)
         }
-      case key.Matches(msg, d.keyMap.Open):
-        if d.rdata.reviewing {
-          d.rdata.complete = true
-        } else if d.descShown {
-          ViewFalseDescription()
-          d.descShown = !d.descShown
-          d.Cards.SetDelegate(delegate)
-        } else {
-          ViewTrueDescription()
-          d.descShown = !d.descShown
-          d.Cards.SetDelegate(delegate)
-        }
         return d.Update(nil)
+      case key.Matches(msg, d.keyMap.Search):
+        if !d.searching {
+          d.searching = true
+          // listStyle = listStyle.Align(lipgloss.Left)
+        }
+      case key.Matches(msg, d.keyMap.Open):
+        if !d.searching {
+          if d.rdata.reviewing {
+            d.rdata.complete = true
+          } else if d.descShown {
+            ViewFalseDescription()
+            d.descShown = !d.descShown
+            d.Cards.SetDelegate(delegate)
+          } else {
+            ViewTrueDescription()
+            d.descShown = !d.descShown
+            d.Cards.SetDelegate(delegate)
+          }
+          return d.Update(nil)
+        }
       case key.Matches(msg, d.keyMap.Easy):
         if d.rdata.complete {
           d.rdata.curr.Score = 1
@@ -194,6 +207,10 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
           d.rdata.curr.Status = New
           d.rdata.currIx++
           d.rdata.complete = false
+        }
+      case key.Matches(msg, d.keyMap.Enter):
+        if d.searching {
+          d.searching = false
         }
     }
   case tea.WindowSizeMsg:
@@ -251,16 +268,13 @@ func (d Deck) View() string {
       footer = lipgloss.JoinVertical(
         lipgloss.Center,
         ansStyle.Render(d.rdata.curr.Back),
-        d.help.Styles.ShortKey.Inline(true).Render("Card Difficulty:"),
+        helpKeyColor.Render("Card Difficulty:"),
         lipgloss.NewStyle().Inline(true).Render(d.help.View(d)),
       )
     } else {
-      key := d.help.Styles.ShortKey.Inline(true).Render(d.keyMap.Open.Help().Key) 
-      sep := d.help.Styles.ShortSeparator.Inline(true).Render(d.help.ShortSeparator)
-      desc := d.help.Styles.ShortDesc.Inline(true).Render(d.keyMap.Open.Help().Desc)
       footer = lipgloss.JoinVertical(
         lipgloss.Center,
-        key + sep + desc,
+        helpKeyColor.Render(d.keyMap.Open.Help().Key) + helpSep + helpDescColor.Render(d.keyMap.Open.Help().Desc),
       )
     }
 
@@ -272,6 +286,8 @@ func (d Deck) View() string {
     return cardStyle.Render(questStyle.Render(ui))
   } else {
     h, v := listStyle.GetFrameSize()
+    // listStyle = listStyle.Width(width-h).Height(height-v)
+    listStyle = listStyle.MarginLeft(3*width/10)
     d.Cards.SetSize(width-h, height-v)
     return listStyle.Render(d.Cards.View())
   }

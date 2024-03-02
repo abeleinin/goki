@@ -54,6 +54,7 @@ type keyMap struct {
   Medium key.Binding
   Hard   key.Binding
   Save   key.Binding
+  Search key.Binding
 
   ShowFullHelp  key.Binding
   CloseFullHelp key.Binding
@@ -96,6 +97,14 @@ func DeckKeyMap() keyMap {
     Delete: key.NewBinding(
       key.WithKeys("d"),
       key.WithHelp("d", "delete card"),
+    ),
+    Search: key.NewBinding(
+      key.WithKeys("/"),
+      key.WithHelp("/", "filter cards"),
+    ),
+    Enter: key.NewBinding(
+      key.WithKeys("enter"),
+      key.WithHelp("enter", "search"),
     ),
   }
 }
