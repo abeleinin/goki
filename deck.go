@@ -50,6 +50,7 @@ func NewCard(front, back string) *Card {
 type Deck struct {
   keyMap keyMap
   help   help.Model
+  descShown bool
 
   // Deck table information
   name        string 
@@ -115,10 +116,11 @@ func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
     help: help.New(),
     name: name,
     json: jsonName,
-    Cards: list.New(lst, list.NewDefaultDelegate(), 0, 0),
+    Cards: list.New(lst, InitCustomDelegate(), 0, 0),
     keyMap: DeckKeyMap(),
     rdata: ReviewData{},
   }
+  d.descShown = true
   d.help.ShowAll = false
   d.UpdateStatus()
   return d
@@ -160,7 +162,17 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
           return f.Update(nil)
         }
       case key.Matches(msg, d.keyMap.Open):
-        d.rdata.complete = true
+        if d.rdata.reviewing {
+          d.rdata.complete = true
+        } else if d.descShown {
+          ViewFalseDescription()
+          d.descShown = !d.descShown
+          d.Cards.SetDelegate(delegate)
+        } else {
+          ViewTrueDescription()
+          d.descShown = !d.descShown
+          d.Cards.SetDelegate(delegate)
+        }
         return d.Update(nil)
       case key.Matches(msg, d.keyMap.Easy):
         if d.rdata.complete {
