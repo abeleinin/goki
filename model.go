@@ -1,6 +1,7 @@
 package main
 
 import (
+  "github.com/charmbracelet/bubbles/list"
   "github.com/charmbracelet/bubbles/help"
   "github.com/charmbracelet/bubbles/key"
   "github.com/charmbracelet/bubbles/table"
@@ -22,6 +23,7 @@ var (
 type User struct {
   id      string
   help    help.Model
+  KeyMap  keyMap
   table   table.Model
   decks   []*Deck // table -> decks
 }
@@ -46,8 +48,8 @@ func (u *User) UpdateTable() {
 
 func NewUser() *User {
 	help := help.New()
-	help.ShowAll = true
-	return &User{help: help}
+	help.ShowAll = false
+	return &User{help: help, KeyMap: DefaultKeyMap(),}
 }
 
 func (u *User) Init() tea.Cmd {
@@ -59,18 +61,26 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
   switch msg := msg.(type) {
     case tea.KeyMsg:
       switch {
-        case key.Matches(msg, keys.Quit):
+        case key.Matches(msg, u.KeyMap.Quit):
           return u, tea.Quit
-        case key.Matches(msg, keys.Enter):
+        case key.Matches(msg, u.KeyMap.Open):
           i := u.table.Cursor()
           u.decks[i].rdata = ReviewData{}
           return u.decks[i].Update(nil)
-        case key.Matches(msg, keys.Review):
+        case key.Matches(msg, u.KeyMap.Review):
           i := sg_user.table.Cursor()
           u.decks[i].StartReview()
           return u.decks[i].Update(nil)
-        case key.Matches(msg, keys.Back):
+        case key.Matches(msg, u.KeyMap.New):
+          newDeck := NewDeck("New Deck", "new.json", []list.Item{})
+          sg_user.decks = append(sg_user.decks, newDeck)
+          sg_user.table.SetRows(updateRows())
+        case key.Matches(msg, u.KeyMap.Back):
           return u.Update(nil)
+        case key.Matches(msg, u.KeyMap.ShowFullHelp):
+          fallthrough
+        case key.Matches(msg, u.KeyMap.CloseFullHelp):
+          u.help.ShowAll = !u.help.ShowAll
       }
     case tea.WindowSizeMsg:
       h, v := docStyle.GetFrameSize()
@@ -97,6 +107,7 @@ func (u *User) View() string {
                 Bold(true).
                 Foreground(lipgloss.Color("0")).
                 MarginBottom(1)
+  helpStyle := lipgloss.NewStyle().Align(lipgloss.Left).Width(58)
 
   gokiLogo := `   ________        __    __  
   /  _____/  ____ |  | _|__|
@@ -106,15 +117,16 @@ func (u *User) View() string {
          \/            \/   `
 
   pageLeft := lipgloss.JoinVertical(
-    lipgloss.Left,
+    lipgloss.Center,
     u.table.View(),             // Render the table
-    u.help.View(keys),          // Render the help
+    helpStyle.Render(u.help.View(u)),
   )
 
   page := lipgloss.JoinVertical(
     lipgloss.Center,            // Center page
     logoStyle.Render(gokiLogo), // Render the logo
     pageLeft,
+    "",
   )
   return docStyle.Render(page)
 }

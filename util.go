@@ -11,14 +11,7 @@ import (
   "github.com/charmbracelet/lipgloss"
 )
 
-func initTable() {
-  header := []table.Column{
-    {Title: "Decks", Width: 20},
-    {Title: "New", Width: 10},
-    {Title: "Learning", Width: 10},
-    {Title: "Review", Width: 10},
-  }
-
+func updateRows() []table.Row {
   rows := []table.Row{}
   for _, deck := range sg_user.decks {
     deck.Cards.Title = deck.Name()
@@ -27,6 +20,18 @@ func initTable() {
                                   deck.NumLearning(),
                                   deck.NumReview()})
   }
+  return rows
+}
+
+func initTable() {
+  header := []table.Column{
+    {Title: "Decks", Width: 20},
+    {Title: "New", Width: 10},
+    {Title: "Learning", Width: 10},
+    {Title: "Review", Width: 10},
+  }
+
+  rows := updateRows()
 
   sg_user.table = table.New(
     table.WithColumns(header),

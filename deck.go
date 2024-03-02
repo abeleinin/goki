@@ -1,6 +1,8 @@
 package main
 
 import (
+  "fmt"
+  "os"
   "time"
   "strconv"
 
@@ -8,6 +10,8 @@ import (
   "github.com/charmbracelet/bubbles/key"
   tea "github.com/charmbracelet/bubbletea"
   "github.com/charmbracelet/lipgloss"
+
+  "golang.org/x/term"
 )
 
 var (
@@ -43,6 +47,8 @@ func NewCard(front, back string) *Card {
 }
 
 type Deck struct {
+  keyMap keyMap
+
   // Deck table information
   name        string 
   numNew      int
@@ -104,6 +110,8 @@ func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
     name: name,
     json: jsonName,
     Cards: list.New(lst, list.NewDefaultDelegate(), 0, 0),
+    keyMap: DefaultKeyMap(),
+    rdata: ReviewData{},
   }
   d.UpdateStatus()
   return d
@@ -118,41 +126,41 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
   switch msg := msg.(type) {
   case tea.KeyMsg:
     switch {
-      case key.Matches(msg, keys.Quit):
+      case key.Matches(msg, d.keyMap.Quit):
         return d, tea.Quit
-      case key.Matches(msg, keys.Back):
+      case key.Matches(msg, d.keyMap.Back):
         sg_user.UpdateTable()
         return sg_user.Update(nil)
-      case key.Matches(msg, keys.New):
+      case key.Matches(msg, d.keyMap.New):
         f := newDefaultForm()
         f.edit = false
         return f.Update(nil)
-      case key.Matches(msg, keys.Save):
+      case key.Matches(msg, d.keyMap.Save):
         saveCards(&d)
-      case key.Matches(msg, keys.Edit):
+      case key.Matches(msg, d.keyMap.Edit):
         card := d.Cards.SelectedItem().(*Card)
         f := NewForm(card.Front, card.Back)
         f.index = d.Cards.Index()
         f.edit = true
         return f.Update(nil)
-      case key.Matches(msg, keys.Open):
+      case key.Matches(msg, d.keyMap.Open):
         d.rdata.complete = true
         return d.Update(nil)
-      case key.Matches(msg, keys.Easy):
+      case key.Matches(msg, d.keyMap.Easy):
         if d.rdata.complete {
           d.rdata.curr.Score = 1
           d.rdata.curr.Status = Complete
           d.rdata.currIx++
           d.rdata.complete = false
         }
-      case key.Matches(msg, keys.Medium):
+      case key.Matches(msg, d.keyMap.Medium):
         if d.rdata.complete {
           d.rdata.curr.Score = 0
           d.rdata.curr.Status = Learning
           d.rdata.currIx++
           d.rdata.complete = false
         }
-      case key.Matches(msg, keys.Hard):
+      case key.Matches(msg, d.keyMap.Hard):
         if d.rdata.complete {
           d.rdata.curr.Score = 0
           d.rdata.curr.Status = New
@@ -184,29 +192,42 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (d Deck) View() string {
   if d.rdata.reviewing {
+
+    fd := int(os.Stdout.Fd())
+    width, height, err := term.GetSize(fd)
+    if err != nil {
+        fmt.Println("Error getting size:", err)
+    }
+    cardStyle := lipgloss.NewStyle().
+                  Align(lipgloss.Center).
+                  Width(width).
+                  Height(height)
+
     var ui string
     questStyle := lipgloss.NewStyle().
                   Bold(true).
                   Foreground(lipgloss.Color("10")).
                   Border(lipgloss.RoundedBorder()).
                   Padding(5, 20)
+    ansStyle := lipgloss.NewStyle().
+                Foreground(lipgloss.Color("12"))
 
     if d.rdata.complete {
       ui = lipgloss.JoinVertical(
         lipgloss.Center,
-        questStyle.Render(d.rdata.curr.Front),
+        d.rdata.curr.Front,
         "",
-        d.rdata.curr.Back,
+        ansStyle.Render(d.rdata.curr.Back),
       )
     } else {
       ui = lipgloss.JoinVertical(
         lipgloss.Center,
-        questStyle.Render(d.rdata.curr.Front),
+        d.rdata.curr.Front,
         "",
         "",
       )
     }
-    return ui
+    return cardStyle.Render(questStyle.Render(ui))
   }
   return listStyle.Render(d.Cards.View())
 }

@@ -1,15 +1,22 @@
 package main
 
 import (
+  "fmt"
+  "os"
+
   "github.com/charmbracelet/bubbles/help"
   "github.com/charmbracelet/bubbles/key"
   "github.com/charmbracelet/bubbles/textarea"
   "github.com/charmbracelet/bubbles/textinput"
   tea "github.com/charmbracelet/bubbletea"
   "github.com/charmbracelet/lipgloss"
+
+  "golang.org/x/term"
 )
 
 type Form struct {
+  keyMap      keyMap
+
   help        help.Model
   question    textinput.Model
   answer      textinput.Model
@@ -18,11 +25,10 @@ type Form struct {
   edit        bool
 }
 
-// var promptStyle = lipgloss.NewStyle().Width(100).Align(lipgloss.Center).MarginTop(10)
-var promptStyle = lipgloss.NewStyle().MarginLeft(60).MarginTop(10).Padding(5, 20).Align(lipgloss.Center).Border(lipgloss.RoundedBorder())
+var promptStyle = lipgloss.NewStyle().Width(100).Height(100).Align(lipgloss.Center).Padding(2, 2)
 
 func newDefaultForm() *Form {
-  return NewForm("Write Question Here...", "Answer Here...")
+  return NewForm("card front...", "card back...")
 }
 
 func NewForm(question, answer string) *Form {
@@ -30,7 +36,9 @@ func NewForm(question, answer string) *Form {
     help:       help.New(),
     question:   textinput.New(),
     answer:     textinput.New(),
+    keyMap:     FormKeyMap(),
   }
+  fc.help.ShowAll = false
   fc.question.Placeholder = question
   fc.answer.Placeholder = answer
   fc.question.Focus()
@@ -55,17 +63,17 @@ func (f Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
   switch msg := msg.(type) {
   case tea.KeyMsg:
     switch {
-    case key.Matches(msg, keys.Back):
+    case key.Matches(msg, f.keyMap.Back):
       i := sg_user.table.Cursor()
       return sg_user.decks[i].Update(nil)
-    case key.Matches(msg, keys.Enter):
+    case key.Matches(msg, f.keyMap.Enter):
       if f.question.Focused() {
         f.question.Blur()
         f.answer.Focus()
         return f, textarea.Blink
       }
       return sg_user.Update(f)
-    case key.Matches(msg, keys.Tab):
+    case key.Matches(msg, f.keyMap.Tab):
       if f.answer.Focused() {
         f.answer.Blur()
         f.question.Focus()
@@ -73,25 +81,51 @@ func (f Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       }
     }
   case tea.WindowSizeMsg:
-    h, _ := promptStyle.GetFrameSize()
-    promptStyle = promptStyle.MarginLeft(msg.Width - msg.Width/2 - h/2)
+    h, v := promptStyle.GetFrameSize()
+    promptStyle = promptStyle.Width(msg.Width - h).Height(msg.Height - v)
   }
+
   if f.question.Focused() {
     f.question, cmd = f.question.Update(msg)
     return f, cmd
   }
+
   f.answer, cmd = f.answer.Update(msg)
   return f, cmd
 }
 
 func (f Form) View() string {
+  helpStyle := lipgloss.NewStyle().Align(lipgloss.Center)
+
+  fd := int(os.Stdout.Fd())
+  width, height, err := term.GetSize(fd)
+  if err != nil {
+      fmt.Println("Error getting size:", err)
+  }
+
+  promptStyle = promptStyle.
+                Align(lipgloss.Center).
+                Width(width).
+                Height(height)
+
+  viewStyle := lipgloss.NewStyle().
+                Border(lipgloss.RoundedBorder()).
+                Padding(2, 2, 0, 2)
+
+  padTop := lipgloss.NewStyle().PaddingTop(2)
+
   prompt := lipgloss.JoinVertical(
-    lipgloss.Top,
-    "Create a new Form:",
+    lipgloss.Left,
+    "Create new card:",
     f.question.View(),
     f.answer.View(),
-    f.help.View(keys),
   )
 
-  return promptStyle.Render(prompt)
+  ui := lipgloss.JoinVertical(
+    lipgloss.Left,
+    prompt,
+    padTop.Render(helpStyle.Render(f.help.View(f))),
+  )
+
+  return promptStyle.Render(viewStyle.Render(ui))
 }

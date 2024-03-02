@@ -2,14 +2,24 @@ package main
 
 import "github.com/charmbracelet/bubbles/key"
 
-func (k keyMap) ShortHelp() []key.Binding {
-  return []key.Binding{k.Help, k.Quit}
+func (u User) ShortHelp() []key.Binding {
+  return []key.Binding{u.KeyMap.Help, u.KeyMap.Quit}
 }
 
-func (k keyMap) FullHelp() [][]key.Binding {
+func (u User) FullHelp() [][]key.Binding {
   return [][]key.Binding{
-    {k.Up, k.Down, k.Left, k.Right}, // first column
-    {k.Help, k.Quit},                // second column
+    {u.KeyMap.Help, u.KeyMap.Quit, u.KeyMap.Up, u.KeyMap.Down},
+    {u.KeyMap.Open, u.KeyMap.New, u.KeyMap.Edit, u.KeyMap.Review},
+  }
+}
+
+func (f Form) ShortHelp() []key.Binding {
+  return []key.Binding{f.keyMap.Enter, f.keyMap.Tab, f.keyMap.Back}
+}
+
+func (f Form) FullHelp() [][]key.Binding {
+  return [][]key.Binding{
+    {f.keyMap.Enter, f.keyMap.Tab, f.keyMap.Back},
   }
 }
 
@@ -32,79 +42,101 @@ type keyMap struct {
   Medium key.Binding
   Hard   key.Binding
   Save   key.Binding
+
+  ShowFullHelp  key.Binding
+  CloseFullHelp key.Binding
 }
 
-var keys = keyMap{
-  New: key.NewBinding(
-    key.WithKeys("n"),
-    key.WithHelp("n", "new"),
-  ),
-  Edit: key.NewBinding(
-    key.WithKeys("e"),
-    key.WithHelp("e", "edit"),
-  ),
-  Delete: key.NewBinding(
-    key.WithKeys("d"),
-    key.WithHelp("d", "delete"),
-  ),
-  Up: key.NewBinding(
-    key.WithKeys("up", "k"),
-    key.WithHelp("↑/k", "move up"),
-  ),
-  Down: key.NewBinding(
-    key.WithKeys("down", "j"),
-    key.WithHelp("↓/j", "move down"),
-  ),
-  Right: key.NewBinding(
-    key.WithKeys("right", "l"),
-    key.WithHelp("→/l", "move right"),
-  ),
-  Left: key.NewBinding(
-    key.WithKeys("left", "h"),
-    key.WithHelp("←/l", "move left"),
-  ),
-  Enter: key.NewBinding(
-    key.WithKeys("enter"),
-    key.WithHelp("enter", "enter"),
-  ),
-  Help: key.NewBinding(
-    key.WithKeys("?"),
-    key.WithHelp("?", "toggle help"),
-  ),
-  Quit: key.NewBinding(
-    key.WithKeys("q", "ctrl+c"),
-    key.WithHelp("q/ctrl+c", "quit"),
-  ),
-  Back: key.NewBinding(
-    key.WithKeys("esc"),
-    key.WithHelp("esc", "back"),
-  ),
-  Tab: key.NewBinding(
-    key.WithKeys("tab"),
-    key.WithHelp("tab", "move focus"),
-  ),
-  Review: key.NewBinding(
-    key.WithKeys("r"),
-    key.WithHelp("r", "Review selected deck"),
-  ),
-  Open: key.NewBinding(
-    key.WithKeys("o"),
-    key.WithHelp("o", "Reveal card"),
-  ),
-  Easy: key.NewBinding(
-    key.WithKeys("1"),
-    key.WithHelp("1", "Card easy"),
-  ),
-  Medium: key.NewBinding(
-    key.WithKeys("2"),
-    key.WithHelp("2", "Card medium"),
-  ),
-  Hard: key.NewBinding(
-    key.WithKeys("3"),
-    key.WithHelp("3", "Card hard"),
-  ),
-  Save: key.NewBinding(
-    key.WithKeys("ctrl+s"),
-    key.WithHelp("ctrl+s", "Save cards"),
-  ),
+func FormKeyMap() keyMap {
+  return keyMap{
+    Enter: key.NewBinding(
+      key.WithKeys("enter"),
+      key.WithHelp("enter", "next field/submit"),
+    ),
+    Tab: key.NewBinding(
+      key.WithKeys("tab"),
+      key.WithHelp("tab", "previous field"),
+    ),
+    Back: key.NewBinding(
+      key.WithKeys("esc"),
+      key.WithHelp("esc", "previous page"),
+    ),
+  }
+}
+
+func DefaultKeyMap() keyMap {
+	return keyMap{
+    New: key.NewBinding(
+      key.WithKeys("n"),
+      key.WithHelp("n", "new deck"),
+    ),
+    Edit: key.NewBinding(
+      key.WithKeys("e"),
+      key.WithHelp("e", "edit deck"),
+    ),
+    Delete: key.NewBinding(
+      key.WithKeys("d"),
+      key.WithHelp("d", "delete deck"),
+    ),
+    Up: key.NewBinding(
+      key.WithKeys("up", "k"),
+      key.WithHelp("↑/k", "move up"),
+    ),
+    Down: key.NewBinding(
+      key.WithKeys("down", "j"),
+      key.WithHelp("↓/j", "move down"),
+    ),
+    Enter: key.NewBinding(
+      key.WithKeys("enter"),
+      key.WithHelp("enter", "enter"),
+    ),
+    Help: key.NewBinding(
+      key.WithKeys("?"),
+      key.WithHelp("?", "toggle help"),
+    ),
+    Quit: key.NewBinding(
+      key.WithKeys("q", "ctrl+c"),
+      key.WithHelp("q/ctrl+c", "quit"),
+    ),
+    Back: key.NewBinding(
+      key.WithKeys("esc"),
+      key.WithHelp("esc", "back to previous page"),
+    ),
+    Tab: key.NewBinding(
+      key.WithKeys("tab"),
+      key.WithHelp("tab", "move focus"),
+    ),
+    Review: key.NewBinding(
+      key.WithKeys("r"),
+      key.WithHelp("r", "review selected deck"),
+    ),
+    Open: key.NewBinding(
+      key.WithKeys("o"),
+      key.WithHelp("o", "view deck"),
+    ),
+    Easy: key.NewBinding(
+      key.WithKeys("1"),
+      key.WithHelp("1", "card easy"),
+    ),
+    Medium: key.NewBinding(
+      key.WithKeys("2"),
+      key.WithHelp("2", "card medium"),
+    ),
+    Hard: key.NewBinding(
+      key.WithKeys("3"),
+      key.WithHelp("3", "card hard"),
+    ),
+    Save: key.NewBinding(
+      key.WithKeys("ctrl+s"),
+      key.WithHelp("ctrl+s", "save cards"),
+    ),
+    ShowFullHelp: key.NewBinding(
+      key.WithKeys("?"),
+      key.WithHelp("?", "more"),
+    ),
+    CloseFullHelp: key.NewBinding(
+      key.WithKeys("?"),
+      key.WithHelp("?", "close help"),
+    ),
+  }
 }
