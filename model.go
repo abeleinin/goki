@@ -100,9 +100,12 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
             u.help.ShowAll = !u.help.ShowAll
           }
         case key.Matches(msg, u.KeyMap.Edit):
-          u.table.Blur()
-          u.input.Focus()
-          u.input.PromptStyle = focusedStyle
+          if !u.input.Focused() {
+            u.table.Blur()
+            u.input.Focus()
+            u.input.PromptStyle = focusedStyle
+            return u, nil
+          }
         case key.Matches(msg, u.KeyMap.Enter):
           s := u.input.Value()
           i := u.table.Cursor()
