@@ -1,6 +1,9 @@
 package main
 
 import (
+  "time"
+  "math"
+  "math/rand"
   "encoding/json"
   "io/ioutil"
   "log"
@@ -8,12 +11,13 @@ import (
 
   "github.com/charmbracelet/bubbles/list"
   "github.com/charmbracelet/bubbles/table"
+  "github.com/charmbracelet/bubbles/textinput"
   "github.com/charmbracelet/lipgloss"
 )
 
 func updateRows() []table.Row {
   rows := []table.Row{}
-  for _, deck := range sg_user.decks {
+  for _, deck := range currUser.decks {
     deck.Cards.Title = deck.Name
     rows = append(rows, table.Row{deck.Name, 
                                   deck.NumNew(), 
@@ -33,7 +37,7 @@ func initTable() {
 
   rows := updateRows()
 
-  sg_user.table = table.New(
+  currUser.table = table.New(
     table.WithColumns(header),
     table.WithRows(rows),
     table.WithFocused(true),
@@ -50,7 +54,7 @@ func initTable() {
     Background(lipgloss.Color("57")).
     Bold(false)
 
-  sg_user.table.SetStyles(s)
+  currUser.table.SetStyles(s)
 }
 
 var mathCards []list.Item
@@ -82,15 +86,33 @@ func initCards(saveCards bool) {
   }
 }
 
+func initDecks() {
+  initCards(true)
+  mathDeck := NewDeck("Math", "math.json", mathCards)
+  aboutDeck := NewDeck("About Me", "about.json", aboutCards)
+  quizDeck := NewDeck("Quiz", "test.json", quizCards)
+
+  currUser.decks = append(currUser.decks, mathDeck)
+  currUser.decks = append(currUser.decks, aboutDeck)
+  currUser.decks = append(currUser.decks, quizDeck)
+}
+
+func initInput() {
+  currUser.input = textinput.New()
+  currUser.input.Placeholder = ""
+  currUser.input.PromptStyle = blurredStyle
+  currUser.input.CharLimit = 20
+}
+
 func saveAll() {
   saveDecks()
-  for _, deck := range sg_user.decks {
+  for _, deck := range currUser.decks {
     saveCards(deck)
   }
 }
 
 func saveDecks() {
-  jsonData, err := json.Marshal(sg_user.Decks())
+  jsonData, err := json.Marshal(currUser.Decks())
   if err != nil {
       log.Fatal(err)
   }
@@ -110,7 +132,7 @@ func loadDecks() {
   for _, curr := range d {
     cards := readCards("./cards/" + curr.Json)
     deck := NewDeck(curr.Name, curr.Json, cards)
-    sg_user.decks = append(sg_user.decks, deck)
+    currUser.decks = append(currUser.decks, deck)
   }
 }
 
@@ -168,11 +190,54 @@ func readCards(fileName string) []list.Item {
       Front: jsonCard.Front,
       Back: jsonCard.Back,
       Score: jsonCard.Score,
+      Interval: jsonCard.Interval,
+      EaseFactor: jsonCard.EaseFactor,
       Status: jsonCard.Status,
-      ReviewAt: jsonCard.ReviewAt,
+      LastReviewed: jsonCard.LastReviewed,
     }
     cards = append(cards, &card)
   }
 
   return cards
+}
+
+func (d *Deck) GetReviewCards() []*Card {
+  var (
+    timeNow = time.Now()
+
+    c            *Card
+    duration     time.Duration
+    minutes      float64
+    reviewCards []*Card
+  )
+
+  for _, card := range d.Cards.Items() {
+    if card != nil {
+      c = card.(*Card)
+      if c.Status == New {
+        reviewCards = append(reviewCards, c)
+      } else {
+        duration = timeNow.Sub(c.LastReviewed)
+        minutes = math.Floor(duration.Minutes())
+        if minutes >= float64(c.Interval) {
+          reviewCards = append(reviewCards, c)
+          c.Status = Review
+        }
+      }
+    }
+  }
+
+  rand.Shuffle(len(reviewCards), func(i, j int) {
+    reviewCards[i], reviewCards[j] = reviewCards[j], reviewCards[i]
+  })
+
+  return reviewCards
+}
+
+func updateTableColumns() {
+  for _, deck := range currUser.decks {
+    deck.GetReviewCards()
+    deck.UpdateStatus()
+  }
+  currUser.UpdateTable()
 }

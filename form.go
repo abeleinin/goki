@@ -15,17 +15,15 @@ import (
 )
 
 type Form struct {
-  keyMap      keyMap
+  keyMap   keyMap
 
-  help        help.Model
-  question    textinput.Model
-  answer      textinput.Model
+  help     help.Model
+  question textinput.Model
+  answer   textinput.Model
 
-  index       int  
-  edit        bool
+  index    int  
+  edit     bool
 }
-
-var promptStyle = lipgloss.NewStyle().Width(100).Height(100).Align(lipgloss.Center).Padding(2, 2)
 
 func newDefaultForm() *Form {
   return NewForm("card front...", "card back...")
@@ -78,15 +76,15 @@ func (f Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
   case tea.KeyMsg:
     switch {
     case key.Matches(msg, f.keyMap.Back):
-      i := sg_user.table.Cursor()
-      return sg_user.decks[i].Update(nil)
+      i := currUser.table.Cursor()
+      return currUser.decks[i].Update(nil)
     case key.Matches(msg, f.keyMap.Enter):
       if f.question.Focused() {
         f.question.Blur()
         f.answer.Focus()
         return f, textarea.Blink
       }
-      return sg_user.Update(f)
+      return currUser.Update(f)
     case key.Matches(msg, f.keyMap.Tab):
       if f.answer.Focused() {
         f.answer.Blur()

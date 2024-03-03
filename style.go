@@ -20,16 +20,22 @@ const (
 var (
   delegate *list.DefaultDelegate
 
-  homeFooterStyle = lipgloss.NewStyle().Align(lipgloss.Left).Width(58)
+  // model.go
+  logoStyle        = lipgloss.NewStyle().Bold(true).MarginBottom(1)
+  focusedStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
+  blurredStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
+  docStyle         = lipgloss.NewStyle().Width(100).Height(100).Align(lipgloss.Center)
+  homeFooterStyle  = lipgloss.NewStyle().Align(lipgloss.Left).Width(58)
 
-  h             = help.New()
-  helpKeyColor  = h.Styles.ShortKey.Inline(true)
-  helpDescColor = h.Styles.ShortDesc.Inline(true)
+  // deck.go
+  listStyle        = lipgloss.NewStyle().Align(lipgloss.Left).MarginLeft(40).Padding(2)
 
-  logoStyle           = lipgloss.NewStyle().Bold(true).MarginBottom(1)
-  focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
-  blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
-  docStyle            = lipgloss.NewStyle().Width(100).Height(100).Align(lipgloss.Center)
+  // form.go
+  promptStyle      = lipgloss.NewStyle().Width(100).Height(100).Align(lipgloss.Center).Padding(2, 2)
+
+  // other
+  helpKeyColor     = help.New().Styles.ShortKey.Inline(true)
+  helpDescColor    = help.New().Styles.ShortDesc.Inline(true)
 )
 
 func InitCustomDelegate() list.DefaultDelegate {

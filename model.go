@@ -39,7 +39,7 @@ func (u *User) UpdateTable() {
       rows = append(rows, currRows[j])
     }
   }
-  sg_user.table.SetRows(rows)
+  currUser.table.SetRows(rows)
 }
 
 func NewUser() *User {
@@ -69,15 +69,18 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         case key.Matches(msg, u.KeyMap.Open):
           if !u.input.Focused() && len(u.decks) > 0 {
             i := u.table.Cursor()
-            u.decks[i].rdata = ReviewData{}
+            u.decks[i].reviewData = ReviewData{}
             return u.decks[i].Update(nil)
           }
         case key.Matches(msg, u.KeyMap.Review):
           if !u.input.Focused() && len(u.decks) > 0 {
-            i := sg_user.table.Cursor()
-            if len(u.decks[i].Cards.Items()) > 0 {
-              u.decks[i].StartReview()
+            i := currUser.table.Cursor()
+            u.decks[i].StartReview()
+            if len(u.decks[i].reviewData.reviewCards) > 0 {
               return u.decks[i].Update(nil)
+            } else {
+              u.decks[i].reviewData = ReviewData{}
+              return u.Update(nil)
             }
           }
         case key.Matches(msg, u.KeyMap.New):
@@ -142,7 +145,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       h, v := docStyle.GetFrameSize()
       docStyle = docStyle.Width(msg.Width - h).Height(msg.Height - v)
     case Form:
-      i := sg_user.table.Cursor()
+      i := currUser.table.Cursor()
       if msg.edit {
         card := u.decks[i].Cards.Items()[msg.index]
         msg.EditCard(card.(*Card))
@@ -152,7 +155,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       }
       return u.decks[i].Update(nil)
     case Deck:
-      i := sg_user.table.Cursor()
+      i := currUser.table.Cursor()
       u.decks[i].UpdateStatus()
       u.UpdateTable()
       return u.Update(nil)

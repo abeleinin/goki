@@ -16,10 +16,12 @@ import (
 )
 
 var (
-  listStyle = lipgloss.NewStyle().Align(lipgloss.Left).MarginLeft(40).Padding(2)
 )
 
-type Status int
+type (
+  Status int
+  Difficulty int
+)
 
 const (
   New Status = iota
@@ -28,13 +30,21 @@ const (
   Complete
 )
 
-type Card struct {
-  Front    string `json:"front"`
-  Back     string `json:"back"`
+const (
+  Again Difficulty = iota
+  Good
+  Easy
+)
 
-  Score    int        `json:"score"`
-  Status   Status     `json:"status"` 
-  ReviewAt time.Time  `json:"reviewAt"`
+type Card struct {
+  Front        string    `json:"front"`
+  Back         string    `json:"back"`
+
+  Score        int       `json:"score"`
+  Interval     int       `json:"interval"`
+  EaseFactor   float64   `json:"easeFactor"`
+  Status       Status    `json:"status"` 
+  LastReviewed time.Time `json:"LastReviewed"`
 }
 
 func NewCard(front, back string) *Card {
@@ -42,36 +52,62 @@ func NewCard(front, back string) *Card {
     Front: front,
     Back: back,
     Score: 0,
+    Interval: 0,
     Status: New,
-    ReviewAt: time.Now(),
   }
 }
 
+func (c *Card) SM2(diff Difficulty) {
+  switch diff {
+    case Again:
+      c.Score = 0
+      c.Interval = 0
+      c.Status = Learning
+    case Good:
+      if c.Score == 0 {
+        c.Interval = 10
+      } else {
+        c.Interval = int(float64(c.Interval) * c.EaseFactor)
+      }
+      c.Status = Complete
+      c.Score++
+    case Easy:
+      if c.Score == 0 {
+        c.Interval = 20
+      } else {
+        c.Interval = int(float64(c.Interval) * c.EaseFactor)
+      }
+      c.Status = Complete
+      c.Score++
+  }
+  c.EaseFactor = c.EaseFactor + 0.1 - (5 - float64(diff)) * (0.08 + (5 - float64(diff)) * 0.02)
+  c.LastReviewed = time.Now()
+}
+
 type Deck struct {
-  keyMap keyMap
-  help   help.Model
-  descShown     bool
-  resultsShown  bool
-  searching     bool
+  keyMap       keyMap
+  help         help.Model
+  descShown    bool
+  resultsShown bool
+  searching    bool
 
-  // Deck table information
-  Name        string `json:"name"`
-  numNew      int
-  numLearning int
-  numReview   int
-  numComplete int
+  numNew       int
+  numLearning  int
+  numReview    int
+  numComplete  int
 
-  // Deck data
-  Json      string `json:"json"`
-  Cards     list.Model `json:"-"`
-  rdata     ReviewData `json:"-"`
+  Name         string    `json:"name"`
+  Json         string     `json:"json"`
+  Cards        list.Model `json:"-"`
+  reviewData   ReviewData `json:"-"`
 }
 
 type ReviewData struct {
-  reviewing bool
-  complete  bool
-  curr      *Card 
-  currIx    int
+  reviewing   bool
+  complete    bool
+  currIx      int
+  curr        *Card 
+  reviewCards []*Card
 }
 
 func (d *Deck) UpdateStatus() {
@@ -97,10 +133,18 @@ func (d *Deck) UpdateStatus() {
 }
 
 func (d *Deck) StartReview() {
-  d.rdata.reviewing = true
-  d.rdata.complete = false
-  d.rdata.currIx = 0
-  d.rdata.curr = d.Cards.Items()[d.rdata.currIx].(*Card)
+  d.reviewData.reviewing = true
+  d.reviewData.complete = false
+  d.reviewData.reviewCards = d.GetReviewCards()
+  d.reviewData.currIx = 0
+  if len(d.reviewData.reviewCards) > 0 {
+    d.reviewData.curr = d.reviewData.reviewCards[0]
+  }
+}
+
+func (d *Deck) UpdateReview() {
+  d.reviewData.currIx++
+  d.reviewData.complete = false
 }
 
 func (d Deck) NumNew()      string { return strconv.Itoa(d.numNew) }
@@ -119,7 +163,7 @@ func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
     Json: jsonName,
     Cards: list.New(lst, InitCustomDelegate(), 0, 0),
     keyMap: DeckKeyMap(),
-    rdata: ReviewData{},
+    reviewData: ReviewData{},
   }
   d.Cards.AdditionalFullHelpKeys = func() []key.Binding {
     return []key.Binding{d.keyMap.Edit, d.keyMap.Delete, d.keyMap.New, d.keyMap.Open, d.keyMap.Save}
@@ -147,25 +191,25 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         if d.resultsShown {
           d.resultsShown = false
         } else {
-          return sg_user.Update(d)
+          return currUser.Update(d)
         }
       case key.Matches(msg, d.keyMap.New):
-        if !d.searching && !d.rdata.reviewing {
+        if !d.searching && !d.reviewData.reviewing {
           f := newDefaultForm()
           f.edit = false
           return f.Update(nil)
         }
       case key.Matches(msg, d.keyMap.Delete):
-        if !d.searching && !d.rdata.reviewing {
+        if !d.searching && !d.reviewData.reviewing {
           d.Cards.RemoveItem(d.Cards.Index())
           return d.Update(nil)
         }
       case key.Matches(msg, d.keyMap.Save):
-        if !d.searching && !d.rdata.reviewing {
+        if !d.searching && !d.reviewData.reviewing {
           saveCards(&d)
         }
       case key.Matches(msg, d.keyMap.Edit):
-        if !d.searching && !d.rdata.reviewing && len(d.Cards.Items()) > 0 {
+        if !d.searching && !d.reviewData.reviewing && len(d.Cards.Items()) > 0 {
           card := d.Cards.SelectedItem().(*Card)
           f := EditForm(card.Front, card.Back)
           f.index = d.Cards.Index()
@@ -179,8 +223,8 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         }
       case key.Matches(msg, d.keyMap.Open):
         if !d.searching {
-          if d.rdata.reviewing {
-            d.rdata.complete = true
+          if d.reviewData.reviewing {
+            d.reviewData.complete = true
           } else if d.descShown {
             ViewFalseDescription()
             d.descShown = !d.descShown
@@ -193,25 +237,19 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
           return d.Update(nil)
         }
       case key.Matches(msg, d.keyMap.Easy):
-        if d.rdata.complete {
-          d.rdata.curr.Score = 1
-          d.rdata.curr.Status = Complete
-          d.rdata.currIx++
-          d.rdata.complete = false
+        if d.reviewData.complete {
+          d.reviewData.curr.SM2(Easy)
+          d.UpdateReview()
         }
-      case key.Matches(msg, d.keyMap.Medium):
-        if d.rdata.complete {
-          d.rdata.curr.Score = 0
-          d.rdata.curr.Status = Learning
-          d.rdata.currIx++
-          d.rdata.complete = false
+      case key.Matches(msg, d.keyMap.Good):
+        if d.reviewData.complete {
+          d.reviewData.curr.SM2(Good)
+          d.UpdateReview()
         }
-      case key.Matches(msg, d.keyMap.Hard):
-        if d.rdata.complete {
-          d.rdata.curr.Score = 0
-          d.rdata.curr.Status = New
-          d.rdata.currIx++
-          d.rdata.complete = false
+      case key.Matches(msg, d.keyMap.Again):
+        if d.reviewData.complete {
+          d.reviewData.curr.SM2(Again)
+          d.UpdateReview()
         }
       case key.Matches(msg, d.keyMap.Enter):
         if d.searching {
@@ -224,16 +262,16 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     d.Cards.SetSize(msg.Width-h, msg.Height-v)
   }
 
-  if d.rdata.reviewing {
-    if d.rdata.currIx > len(d.Cards.Items()) - 1 {
-      d.rdata.reviewing = false
-      d.rdata.complete = false
-      i := sg_user.table.Cursor()
-      sg_user.decks[i].UpdateStatus()
-      sg_user.UpdateTable()
-      return sg_user.Update(nil)
+  if d.reviewData.reviewing {
+    if d.reviewData.currIx > len(d.reviewData.reviewCards) - 1 {
+      d.reviewData.reviewing = false
+      d.reviewData.complete = false
+      i := currUser.table.Cursor()
+      currUser.decks[i].UpdateStatus()
+      currUser.UpdateTable()
+      return currUser.Update(nil)
     } else {
-      d.rdata.curr = d.Cards.Items()[d.rdata.currIx].(*Card)
+      d.reviewData.curr = d.reviewData.reviewCards[d.reviewData.currIx]
     }
   }
 
@@ -250,7 +288,7 @@ func (d Deck) View() string {
   if err != nil {
       fmt.Println("Error getting size:", err)
   }
-  if d.rdata.reviewing {
+  if d.reviewData.reviewing {
     cardStyle := lipgloss.NewStyle().
                   Align(lipgloss.Center).
                   Width(width).
@@ -269,24 +307,24 @@ func (d Deck) View() string {
     footerStyle := lipgloss.NewStyle().MarginTop(3)
 
     var footer string
-    if d.rdata.complete {
+    if d.reviewData.complete {
       footerStyle = footerStyle.MarginTop(1)
       footer = lipgloss.JoinVertical(
         lipgloss.Center,
-        ansStyle.Render(d.rdata.curr.Back),
+        ansStyle.Render(d.reviewData.curr.Back),
         helpKeyColor.Render("Card Difficulty:"),
         lipgloss.NewStyle().Inline(true).Render(d.help.View(d)),
       )
     } else {
       footer = lipgloss.JoinVertical(
         lipgloss.Center,
-        d.help.View(d.rdata.curr),
+        d.help.View(d.reviewData.curr),
       )
     }
 
     ui := lipgloss.JoinVertical(
       lipgloss.Center,
-      d.rdata.curr.Front,
+      d.reviewData.curr.Front,
       footerStyle.Render(footer),
     )
     return cardStyle.Render(questStyle.Render(ui))
