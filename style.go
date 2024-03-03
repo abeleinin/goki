@@ -25,20 +25,22 @@ var (
   homeFooterStyle  = lipgloss.NewStyle().Align(lipgloss.Left).Width(58)
 
   // deck.go
-  cardStyle        = lipgloss.NewStyle().Align(lipgloss.Center).Width(screenWidth).Height(screenHeight)
+  cardStyle        = lipgloss.NewStyle().MarginTop(screenHeight/10).MarginLeft(3*screenWidth/10).Width(2*screenWidth/5).
+                              Height(screenHeight/5).Border(lipgloss.RoundedBorder()).Align(lipgloss.Center)
   listStyle        = lipgloss.NewStyle().Align(lipgloss.Left).MarginLeft(40).Padding(2)
-  questionStyle    = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10")).Border(lipgloss.RoundedBorder()).Padding(5, 20, 0, 20)
-  answerStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("15")).Margin(0, 0, 1, 0)
-  deckFooterStyle  = lipgloss.NewStyle().MarginTop(3)
+  questionStyle    = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10")).MarginTop(2)
+  answerStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("15")).MarginTop(4).MarginBottom(4)
+  deckFooterStyle  = lipgloss.NewStyle().MarginTop(10)
 
   // form.go
-  promptStyle      = lipgloss.NewStyle().Align(lipgloss.Center).Width(screenWidth).Height(screenHeight).Padding(2, 2)
+  promptStyle      = lipgloss.NewStyle().Align(lipgloss.Center).
+                              Margin(screenHeight/10, screenWidth/4, 0, screenWidth/4).Padding(2, 2)
   viewStyle        = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Padding(2, 2, 0, 2)
   formFooterStyle  = lipgloss.NewStyle().Align(lipgloss.Center).PaddingTop(2)
 
   // other
-  helpKeyColor              = help.New().Styles.ShortKey.Inline(true)
-  helpDescColor             = help.New().Styles.ShortDesc.Inline(true)
+  helpKeyColor     = help.New().Styles.ShortKey.Inline(true)
+  helpDescColor    = help.New().Styles.ShortDesc.Inline(true)
 )
 
 func InitCustomDelegate() list.DefaultDelegate {

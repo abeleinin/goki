@@ -150,7 +150,10 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
           return d, tea.Quit
         }
       case key.Matches(msg, d.keyMap.Back):
-        if d.resultsShown {
+        if cli {
+          saveAll()
+          return d, tea.Quit
+        } else if d.resultsShown {
           d.resultsShown = false
         } else {
           return currUser.Update(d)
@@ -222,10 +225,16 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
   case tea.WindowSizeMsg:
     screenWidth, screenHeight = msg.Width, msg.Height
     listStyle = listStyle.MarginLeft(3 * screenWidth / 10)
+    cardStyle = cardStyle.MarginLeft(3*screenWidth/10).MarginTop(screenHeight/10).
+                          Width(2*screenWidth/5).Height(screenHeight/5)
   }
 
   if d.reviewData.reviewing {
     if d.reviewData.currIx > len(d.reviewData.reviewCards) - 1 {
+      if cli {
+        saveAll()
+        return d, tea.Quit
+      }
       d.reviewData.reviewing = false
       d.reviewData.complete = false
       i := currUser.table.Cursor()
@@ -256,7 +265,13 @@ func (d Deck) View() string {
       sections = append(sections, deckFooterStyle.Render(d.help.View(d.reviewData.curr)))
     }
 
-    return cardStyle.Render(questionStyle.Render(lipgloss.JoinVertical(lipgloss.Center, sections...)))
+    page := questionStyle.Render(lipgloss.JoinVertical(lipgloss.Center, sections...))
+
+    if cli {
+      cardStyle = cardStyle.Margin(0)
+    }
+
+    return cardStyle.Render(page)
   }
   return listStyle.Render(d.Cards.View())
 }

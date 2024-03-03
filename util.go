@@ -17,10 +17,7 @@ func updateRows() []table.Row {
   rows := []table.Row{}
   for _, deck := range currUser.decks {
     deck.Cards.Title = deck.Name
-    rows = append(rows, table.Row{deck.Name, 
-                                  deck.NumNew(), 
-                                  deck.NumLearning(),
-                                  deck.NumReview()})
+    rows = append(rows, table.Row{deck.Name, deck.NumNew(), deck.NumLearning(),deck.NumReview()})
   }
   return rows
 }
