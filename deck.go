@@ -292,7 +292,6 @@ func (d Deck) View() string {
     return cardStyle.Render(questStyle.Render(ui))
   } else {
     h, v := listStyle.GetFrameSize()
-    // listStyle = listStyle.Width(width-h).Height(height-v)
     listStyle = listStyle.MarginLeft(3*width/10)
     d.Cards.SetSize(width-h, height-v)
     return listStyle.Render(d.Cards.View())

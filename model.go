@@ -10,12 +10,6 @@ import (
   "github.com/charmbracelet/lipgloss"
 )
 
-var (
-  focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
-  blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
-  docStyle            = lipgloss.NewStyle().Width(100).Height(100).Align(lipgloss.Center)
-)
-
 type User struct {
   id      string
   help    help.Model
@@ -73,25 +67,28 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
             return u, tea.Quit
           }
         case key.Matches(msg, u.KeyMap.Open):
-          if !u.input.Focused() {
+          if !u.input.Focused() && len(u.decks) > 0 {
             i := u.table.Cursor()
             u.decks[i].rdata = ReviewData{}
             return u.decks[i].Update(nil)
           }
         case key.Matches(msg, u.KeyMap.Review):
-          if !u.input.Focused() {
+          if !u.input.Focused() && len(u.decks) > 0 {
             i := sg_user.table.Cursor()
-            u.decks[i].StartReview()
-            return u.decks[i].Update(nil)
+            if len(u.decks[i].Cards.Items()) > 0 {
+              u.decks[i].StartReview()
+              return u.decks[i].Update(nil)
+            }
           }
         case key.Matches(msg, u.KeyMap.New):
           if !u.input.Focused() {
             newDeck := NewDeck("New Deck", "new.json", []list.Item{})
             u.decks = append(u.decks, newDeck)
             u.table.SetRows(updateRows())
+            return u.Update(nil)
           }
         case key.Matches(msg, u.KeyMap.Delete):
-          if !u.input.Focused() {
+          if !u.input.Focused() && len(u.decks) > 0 {
             u.del = true
             u.table.Blur()
             u.input.Focus()
@@ -114,7 +111,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
             u.help.ShowAll = !u.help.ShowAll
           }
         case key.Matches(msg, u.KeyMap.Edit):
-          if !u.input.Focused() {
+          if !u.input.Focused() && len(u.decks) > 0 {
             u.table.Blur()
             u.input.Focus()
             u.input.PromptStyle = focusedStyle
@@ -171,42 +168,24 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (u *User) View() string {
-  logoStyle := lipgloss.NewStyle().
-                Bold(true).
-                MarginBottom(1)
-  footerStyle := lipgloss.NewStyle().Align(lipgloss.Left).Width(58)
+  var (
+    sections []string
+    msg = ""
+  )
 
-  gokiLogo := `   ________        __    __  
-  /  _____/  ____ |  | _|__|
- /   \  ___ /    \|  |/ /  |
- \    \_\  |  /\  |    <|  |
-  \______  /\____/|__|_ \__|
-         \/            \/   `
-  
-  var pageLeft string
+  sections = append(sections, logoStyle.Render(gokiLogo))
+  sections = append(sections, u.table.View())
+
   if u.del {
-    pageLeft = lipgloss.JoinVertical(
-      lipgloss.Center,
-      u.table.View(),
-      footerStyle.Render("Type 'yes' to confirm deletion:"),
-      footerStyle.Render(u.input.View()),
-      footerStyle.Render(u.help.View(u)),
-    )
-  } else {
-    pageLeft = lipgloss.JoinVertical(
-      lipgloss.Center,
-      u.table.View(),
-      "",
-      footerStyle.Render(u.input.View()),
-      footerStyle.Render(u.help.View(u)),
-    )
+    msg = "Type 'yes' to confirm deletion:"
+  } else if len(u.decks) == 0 {
+    msg = "No decks. Press 'N' to create a new deck."
   }
 
-  page := lipgloss.JoinVertical(
-    lipgloss.Center,
-    logoStyle.Render(gokiLogo),
-    pageLeft,
-    "",
-  )
-  return docStyle.Render(page)
+  sections = append(sections, homeFooterStyle.Render(msg))
+  sections = append(sections, homeFooterStyle.Render(u.input.View()))
+  sections = append(sections, homeFooterStyle.Render(u.help.View(u)))
+  sections = append(sections, "")
+
+  return docStyle.Render(lipgloss.JoinVertical(lipgloss.Center, sections...))
 }

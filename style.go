@@ -8,15 +8,28 @@ import (
 
 const (
   bullet   = "•"
+
+  gokiLogo = `   ________        __    __
+  /  _____/  ____ |  | _|__|
+ /   \  ___ /    \|  |/ /  |
+ \    \_\  |  /\  |    <|  |
+  \______  /\____/|__|_ \__|
+         \/            \/   `
 )
 
 var (
   delegate *list.DefaultDelegate
 
-  // Styles
-  h = help.New()
+  homeFooterStyle = lipgloss.NewStyle().Align(lipgloss.Left).Width(58)
+
+  h             = help.New()
   helpKeyColor  = h.Styles.ShortKey.Inline(true)
   helpDescColor = h.Styles.ShortDesc.Inline(true)
+
+  logoStyle           = lipgloss.NewStyle().Bold(true).MarginBottom(1)
+  focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
+  blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
+  docStyle            = lipgloss.NewStyle().Width(100).Height(100).Align(lipgloss.Center)
 )
 
 func InitCustomDelegate() list.DefaultDelegate {
