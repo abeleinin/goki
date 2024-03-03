@@ -1,87 +1,24 @@
 package main
 
 import (
-  "fmt"
-  "os"
-  "time"
-  "strconv"
+	"math"
+	"math/rand"
+	"strconv"
+	"time"
 
-  "github.com/charmbracelet/bubbles/help"
-  "github.com/charmbracelet/bubbles/list"
-  "github.com/charmbracelet/bubbles/key"
-  tea "github.com/charmbracelet/bubbletea"
-  "github.com/charmbracelet/lipgloss"
-
-  "golang.org/x/term"
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
-var (
-)
-
-type (
-  Status int
-  Difficulty int
-)
-
-const (
-  New Status = iota
-  Learning
-  Review
-  Complete
-)
-
-const (
-  Again Difficulty = iota
-  Good
-  Easy
-)
-
-type Card struct {
-  Front        string    `json:"front"`
-  Back         string    `json:"back"`
-
-  Score        int       `json:"score"`
-  Interval     int       `json:"interval"`
-  EaseFactor   float64   `json:"easeFactor"`
-  Status       Status    `json:"status"` 
-  LastReviewed time.Time `json:"LastReviewed"`
-}
-
-func NewCard(front, back string) *Card {
-  return &Card{
-    Front: front,
-    Back: back,
-    Score: 0,
-    Interval: 0,
-    Status: New,
-  }
-}
-
-func (c *Card) SM2(diff Difficulty) {
-  switch diff {
-    case Again:
-      c.Score = 0
-      c.Interval = 0
-      c.Status = Learning
-    case Good:
-      if c.Score == 0 {
-        c.Interval = 10
-      } else {
-        c.Interval = int(float64(c.Interval) * c.EaseFactor)
-      }
-      c.Status = Complete
-      c.Score++
-    case Easy:
-      if c.Score == 0 {
-        c.Interval = 20
-      } else {
-        c.Interval = int(float64(c.Interval) * c.EaseFactor)
-      }
-      c.Status = Complete
-      c.Score++
-  }
-  c.EaseFactor = c.EaseFactor + 0.1 - (5 - float64(diff)) * (0.08 + (5 - float64(diff)) * 0.02)
-  c.LastReviewed = time.Now()
+type ReviewData struct {
+  reviewing   bool
+  complete    bool
+  currIx      int
+  curr        *Card 
+  reviewCards []*Card
 }
 
 type Deck struct {
@@ -102,12 +39,19 @@ type Deck struct {
   reviewData   ReviewData `json:"-"`
 }
 
-type ReviewData struct {
-  reviewing   bool
-  complete    bool
-  currIx      int
-  curr        *Card 
-  reviewCards []*Card
+func (d Deck) NumNew()      string { return strconv.Itoa(d.numNew) }
+func (d Deck) NumLearning() string { return strconv.Itoa(d.numLearning) }
+func (d Deck) NumReview()   string { return strconv.Itoa(d.numReview) }
+func (d Deck) NumComplete() string { return strconv.Itoa(d.numComplete) }
+
+func (d *Deck) StartReview() {
+  d.reviewData.reviewing = true
+  d.reviewData.complete = false
+  d.reviewData.reviewCards = d.GetReviewCards()
+  d.reviewData.currIx = 0
+  if len(d.reviewData.reviewCards) > 0 {
+    d.reviewData.curr = d.reviewData.reviewCards[0]
+  }
 }
 
 func (d *Deck) UpdateStatus() {
@@ -132,29 +76,45 @@ func (d *Deck) UpdateStatus() {
   d.Cards.SetItems(temp)
 }
 
-func (d *Deck) StartReview() {
-  d.reviewData.reviewing = true
-  d.reviewData.complete = false
-  d.reviewData.reviewCards = d.GetReviewCards()
-  d.reviewData.currIx = 0
-  if len(d.reviewData.reviewCards) > 0 {
-    d.reviewData.curr = d.reviewData.reviewCards[0]
+func (d *Deck) GetReviewCards() []*Card {
+  var (
+    timeNow = time.Now()
+
+    c            *Card
+    duration     time.Duration
+    minutes      float64
+    reviewCards []*Card
+  )
+
+  for _, card := range d.Cards.Items() {
+    if card != nil {
+      c = card.(*Card)
+      if c.Status == New {
+        reviewCards = append(reviewCards, c)
+      } else {
+        duration = timeNow.Sub(c.LastReviewed)
+        minutes = math.Floor(duration.Minutes())
+        if minutes >= float64(c.Interval) {
+          reviewCards = append(reviewCards, c)
+          if c.Status == Complete {
+            c.Status = Review
+          }
+        }
+      }
+    }
   }
+
+  rand.Shuffle(len(reviewCards), func(i, j int) {
+    reviewCards[i], reviewCards[j] = reviewCards[j], reviewCards[i]
+  })
+
+  return reviewCards
 }
 
 func (d *Deck) UpdateReview() {
   d.reviewData.currIx++
   d.reviewData.complete = false
 }
-
-func (d Deck) NumNew()      string { return strconv.Itoa(d.numNew) }
-func (d Deck) NumLearning() string { return strconv.Itoa(d.numLearning) }
-func (d Deck) NumReview()   string { return strconv.Itoa(d.numReview) }
-func (d Deck) NumComplete() string { return strconv.Itoa(d.numComplete) }
-
-func (c Card) FilterValue() string { return c.Front }
-func (c Card) Title()       string { return c.Front }
-func (c Card) Description() string { return c.Back }
 
 func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
   d := &Deck{
@@ -165,9 +125,11 @@ func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
     keyMap: DeckKeyMap(),
     reviewData: ReviewData{},
   }
+
   d.Cards.AdditionalFullHelpKeys = func() []key.Binding {
     return []key.Binding{d.keyMap.Edit, d.keyMap.Delete, d.keyMap.New, d.keyMap.Open, d.keyMap.Save}
   }
+  d.Cards.SetSize(screenWidth - 40, screenHeight - 4)
   d.searching = false
   d.descShown = true
   d.help.ShowAll = false
@@ -258,8 +220,8 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         }
     }
   case tea.WindowSizeMsg:
-    h, v := listStyle.GetFrameSize()
-    d.Cards.SetSize(msg.Width-h, msg.Height-v)
+    screenWidth, screenHeight = msg.Width, msg.Height
+    listStyle = listStyle.MarginLeft(3 * screenWidth / 10)
   }
 
   if d.reviewData.reviewing {
@@ -275,63 +237,26 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     }
   }
 
-  d.Cards.SetSize(100, 50)
-
   var cmd tea.Cmd
   d.Cards, cmd = d.Cards.Update(msg)
   return d, cmd
 }
 
 func (d Deck) View() string {
-  fd := int(os.Stdout.Fd())
-  width, height, err := term.GetSize(fd)
-  if err != nil {
-      fmt.Println("Error getting size:", err)
-  }
   if d.reviewData.reviewing {
-    cardStyle := lipgloss.NewStyle().
-                  Align(lipgloss.Center).
-                  Width(width).
-                  Height(height)
+    var sections []string
 
-    questStyle := lipgloss.NewStyle().
-                  Bold(true).
-                  Foreground(lipgloss.Color("10")).
-                  Border(lipgloss.RoundedBorder()).
-                  Padding(5, 20, 0, 20)
+    sections = append(sections, d.reviewData.curr.Front)
 
-    ansStyle := lipgloss.NewStyle().
-                Foreground(lipgloss.Color("15")).
-                Margin(0, 0, 1, 0)
-
-    footerStyle := lipgloss.NewStyle().MarginTop(3)
-
-    var footer string
     if d.reviewData.complete {
-      footerStyle = footerStyle.MarginTop(1)
-      footer = lipgloss.JoinVertical(
-        lipgloss.Center,
-        ansStyle.Render(d.reviewData.curr.Back),
-        helpKeyColor.Render("Card Difficulty:"),
-        lipgloss.NewStyle().Inline(true).Render(d.help.View(d)),
-      )
+      sections = append(sections, answerStyle.Render(d.reviewData.curr.Back))
+      sections = append(sections, helpKeyColor.Render("Card Difficulty:"))
+      sections = append(sections, lipgloss.NewStyle().Inline(true).Render(d.help.View(d)))
     } else {
-      footer = lipgloss.JoinVertical(
-        lipgloss.Center,
-        d.help.View(d.reviewData.curr),
-      )
+      sections = append(sections, deckFooterStyle.Render(d.help.View(d.reviewData.curr)))
     }
 
-    ui := lipgloss.JoinVertical(
-      lipgloss.Center,
-      d.reviewData.curr.Front,
-      footerStyle.Render(footer),
-    )
-    return cardStyle.Render(questStyle.Render(ui))
-  } else {
-    h, v := listStyle.GetFrameSize()
-    listStyle = listStyle.MarginLeft(3*width/10)
-    d.Cards.SetSize(width-h, height-v)
-    return listStyle.Render(d.Cards.View())
+    return cardStyle.Render(questionStyle.Render(lipgloss.JoinVertical(lipgloss.Center, sections...)))
   }
+  return listStyle.Render(d.Cards.View())
 }

@@ -1,18 +1,16 @@
 package main
 
 import (
-  "time"
-  "math"
-  "math/rand"
-  "encoding/json"
-  "io/ioutil"
-  "log"
-  "os"
+	"encoding/json"
+	"io"
+	"log"
+	"os"
 
-  "github.com/charmbracelet/bubbles/list"
-  "github.com/charmbracelet/bubbles/table"
-  "github.com/charmbracelet/bubbles/textinput"
-  "github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/table"
+	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/term"
 )
 
 func updateRows() []table.Row {
@@ -57,46 +55,6 @@ func initTable() {
   currUser.table.SetStyles(s)
 }
 
-var mathCards []list.Item
-var aboutCards []list.Item
-var quizCards []list.Item
-
-func initCards(saveCards bool) {
-  if saveCards {
-    mathCards = readCards("./cards/math.json")
-    aboutCards = readCards("./cards/about.json")
-    quizCards = readCards("./cards/test.json")
-  } else {
-    mathCards = []list.Item{
-      NewCard("What's 2 * 2?", "4"),
-      NewCard("What's 3 * 3?", "9"),
-      NewCard("What's 4 * 4?", "16"),
-      NewCard("What's 5 * 5?", "25"),
-      NewCard("What's 6 * 6?", "36"),
-    }
-    aboutCards = []list.Item{
-      NewCard("What's my name?", "Goki"),
-      NewCard("What's my favorite Language?", "Go :)"),
-    }
-    quizCards = []list.Item{
-      NewCard("What's JSON?", "JavaScript Object Notation"),
-      NewCard("What's a struct?", "A collection of fields"),
-      NewCard("What's a pointer?", "A memory address"),
-    }
-  }
-}
-
-func initDecks() {
-  initCards(true)
-  mathDeck := NewDeck("Math", "math.json", mathCards)
-  aboutDeck := NewDeck("About Me", "about.json", aboutCards)
-  quizDeck := NewDeck("Quiz", "test.json", quizCards)
-
-  currUser.decks = append(currUser.decks, mathDeck)
-  currUser.decks = append(currUser.decks, aboutDeck)
-  currUser.decks = append(currUser.decks, quizDeck)
-}
-
 func initInput() {
   currUser.input = textinput.New()
   currUser.input.Placeholder = ""
@@ -116,7 +74,7 @@ func saveDecks() {
   if err != nil {
       log.Fatal(err)
   }
-  err = os.WriteFile("./decks/alldecks.json", jsonData, 0644)
+  os.WriteFile("./decks/alldecks.json", jsonData, 0644)
 }
 
 func saveCards(d *Deck) {
@@ -124,7 +82,7 @@ func saveCards(d *Deck) {
   if err != nil {
       log.Fatal(err)
   }
-  err = os.WriteFile("./cards/" + d.Json, jsonData, 0644)
+  os.WriteFile("./cards/" + d.Json, jsonData, 0644)
 }
 
 func loadDecks() {
@@ -143,7 +101,7 @@ func readDecks(fileName string) []*Deck {
   }
   defer file.Close()
 
-  byteValue, err := ioutil.ReadAll(file)
+  byteValue, err := io.ReadAll(file)
   if err != nil {
       log.Fatalf("Error reading file: %s", err)
   }
@@ -173,7 +131,7 @@ func readCards(fileName string) []list.Item {
   }
   defer file.Close()
 
-  byteValue, err := ioutil.ReadAll(file)
+  byteValue, err := io.ReadAll(file)
   if err != nil {
       log.Fatalf("Error reading file: %s", err)
   }
@@ -201,43 +159,19 @@ func readCards(fileName string) []list.Item {
   return cards
 }
 
-func (d *Deck) GetReviewCards() []*Card {
-  var (
-    timeNow = time.Now()
-
-    c            *Card
-    duration     time.Duration
-    minutes      float64
-    reviewCards []*Card
-  )
-
-  for _, card := range d.Cards.Items() {
-    if card != nil {
-      c = card.(*Card)
-      if c.Status == New {
-        reviewCards = append(reviewCards, c)
-      } else {
-        duration = timeNow.Sub(c.LastReviewed)
-        minutes = math.Floor(duration.Minutes())
-        if minutes >= float64(c.Interval) {
-          reviewCards = append(reviewCards, c)
-          c.Status = Review
-        }
-      }
-    }
-  }
-
-  rand.Shuffle(len(reviewCards), func(i, j int) {
-    reviewCards[i], reviewCards[j] = reviewCards[j], reviewCards[i]
-  })
-
-  return reviewCards
-}
-
 func updateTableColumns() {
   for _, deck := range currUser.decks {
     deck.GetReviewCards()
     deck.UpdateStatus()
   }
   currUser.UpdateTable()
+}
+
+func GetScreenDimensions() (int, int) {
+  fd := int(os.Stdout.Fd())
+  width, height, err := term.GetSize(fd)
+  if err != nil {
+      log.Println("Error getting screen dimensions:", err)
+  }
+  return width, height
 }

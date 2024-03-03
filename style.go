@@ -1,24 +1,21 @@
 package main
 
 import (
-  "github.com/charmbracelet/bubbles/help"
-  "github.com/charmbracelet/bubbles/list"
-  "github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/lipgloss"
 )
 
-const (
-  bullet   = "•"
-
-  gokiLogo = `   ________        __    __
+const gokiLogo = `   ________        __    __
   /  _____/  ____ |  | _|__|
  /   \  ___ /    \|  |/ /  |
  \    \_\  |  /\  |    <|  |
   \______  /\____/|__|_ \__|
          \/            \/   `
-)
 
 var (
   delegate *list.DefaultDelegate
+  screenWidth, screenHeight = GetScreenDimensions()
 
   // model.go
   logoStyle        = lipgloss.NewStyle().Bold(true).MarginBottom(1)
@@ -28,14 +25,20 @@ var (
   homeFooterStyle  = lipgloss.NewStyle().Align(lipgloss.Left).Width(58)
 
   // deck.go
+  cardStyle        = lipgloss.NewStyle().Align(lipgloss.Center).Width(screenWidth).Height(screenHeight)
   listStyle        = lipgloss.NewStyle().Align(lipgloss.Left).MarginLeft(40).Padding(2)
+  questionStyle    = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10")).Border(lipgloss.RoundedBorder()).Padding(5, 20, 0, 20)
+  answerStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("15")).Margin(0, 0, 1, 0)
+  deckFooterStyle  = lipgloss.NewStyle().MarginTop(3)
 
   // form.go
-  promptStyle      = lipgloss.NewStyle().Width(100).Height(100).Align(lipgloss.Center).Padding(2, 2)
+  promptStyle      = lipgloss.NewStyle().Align(lipgloss.Center).Width(screenWidth).Height(screenHeight).Padding(2, 2)
+  viewStyle        = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Padding(2, 2, 0, 2)
+  formFooterStyle  = lipgloss.NewStyle().Align(lipgloss.Center).PaddingTop(2)
 
   // other
-  helpKeyColor     = help.New().Styles.ShortKey.Inline(true)
-  helpDescColor    = help.New().Styles.ShortDesc.Inline(true)
+  helpKeyColor              = help.New().Styles.ShortKey.Inline(true)
+  helpDescColor             = help.New().Styles.ShortDesc.Inline(true)
 )
 
 func InitCustomDelegate() list.DefaultDelegate {

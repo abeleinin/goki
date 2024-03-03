@@ -1,10 +1,10 @@
 package main
 
 import (
-  "fmt"
-  "os"
+	"fmt"
+	"os"
 
-  tea "github.com/charmbracelet/bubbletea"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 var currUser *User
@@ -20,7 +20,7 @@ func main() {
   p := tea.NewProgram(currUser, tea.WithAltScreen())
 
   if _, err := p.Run(); err != nil {
-    fmt.Println("Error running program:", err)
+    fmt.Println("Error running Goki:", err)
     os.Exit(1)
   }
 }

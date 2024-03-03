@@ -1,17 +1,16 @@
 package main
 
 import (
-  "github.com/charmbracelet/bubbles/list"
-  "github.com/charmbracelet/bubbles/textinput"
-  "github.com/charmbracelet/bubbles/help"
-  "github.com/charmbracelet/bubbles/key"
-  "github.com/charmbracelet/bubbles/table"
-  tea "github.com/charmbracelet/bubbletea"
-  "github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/table"
+	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type User struct {
-  id      string
   help    help.Model
   KeyMap  keyMap
   table   table.Model
@@ -29,7 +28,7 @@ func (u *User) UpdateTable() {
   currRows := u.table.Rows()
   
   rows := []table.Row{}
-  for j, _ := range currRows {
+  for j := range currRows {
     if j == i {
       rows = append(rows, table.Row{u.decks[i].Name, 
                                     u.decks[i].NumNew(), 

@@ -1,17 +1,12 @@
 package main
 
 import (
-  "fmt"
-  "os"
-
-  "github.com/charmbracelet/bubbles/help"
-  "github.com/charmbracelet/bubbles/key"
-  "github.com/charmbracelet/bubbles/textarea"
-  "github.com/charmbracelet/bubbles/textinput"
-  tea "github.com/charmbracelet/bubbletea"
-  "github.com/charmbracelet/lipgloss"
-
-  "golang.org/x/term"
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/textarea"
+	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Form struct {
@@ -93,6 +88,7 @@ func (f Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
       }
     }
   case tea.WindowSizeMsg:
+    screenWidth, screenHeight = msg.Width, msg.Height
     h, v := promptStyle.GetFrameSize()
     promptStyle = promptStyle.Width(msg.Width - h).Height(msg.Height - v)
   }
@@ -107,37 +103,12 @@ func (f Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (f Form) View() string {
-  helpStyle := lipgloss.NewStyle().Align(lipgloss.Center)
+  var sections []string
 
-  fd := int(os.Stdout.Fd())
-  width, height, err := term.GetSize(fd)
-  if err != nil {
-      fmt.Println("Error getting size:", err)
-  }
+  sections = append(sections, "Create new card:")
+  sections = append(sections, f.question.View())
+  sections = append(sections, f.answer.View())
+  sections = append(sections, formFooterStyle.Render(f.help.View(f)))
 
-  promptStyle = promptStyle.
-                Align(lipgloss.Center).
-                Width(width).
-                Height(height)
-
-  viewStyle := lipgloss.NewStyle().
-                Border(lipgloss.RoundedBorder()).
-                Padding(2, 2, 0, 2)
-
-  padTop := lipgloss.NewStyle().PaddingTop(2)
-
-  prompt := lipgloss.JoinVertical(
-    lipgloss.Left,
-    "Create new card:",
-    f.question.View(),
-    f.answer.View(),
-  )
-
-  ui := lipgloss.JoinVertical(
-    lipgloss.Left,
-    prompt,
-    padTop.Render(helpStyle.Render(f.help.View(f))),
-  )
-
-  return promptStyle.Render(viewStyle.Render(ui))
+  return promptStyle.Render(viewStyle.Render(lipgloss.JoinVertical(lipgloss.Left, sections...)))
 }
