@@ -196,6 +196,7 @@ func (u *User) View() string {
 	logoHeight := lipgloss.Height(gokiLogo)
 	footerHeight := lipgloss.Height(footerStack)
 	tableStyle = tableStyle.Height(screenHeight - logoHeight - footerHeight - 2)
+	docStyle = docStyle.Width(screenWidth).Height(screenHeight)
 
 	sections = append(sections, logoStyle.Render(gokiLogo))
 	sections = append(sections, tableStyle.Render(u.table.View()))

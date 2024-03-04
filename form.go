@@ -89,8 +89,6 @@ func (f Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tea.WindowSizeMsg:
 		screenWidth, screenHeight = msg.Width, msg.Height
-		h, v := promptStyle.GetFrameSize()
-		promptStyle = promptStyle.Width(msg.Width - h).Height(msg.Height - v)
 	}
 
 	if f.question.Focused() {
@@ -109,6 +107,12 @@ func (f Form) View() string {
 	sections = append(sections, f.question.View())
 	sections = append(sections, f.answer.View())
 	sections = append(sections, formFooterStyle.Render(f.help.View(f)))
+
+	if screenWidth < 100 {
+		promptStyle = promptStyle.Margin(screenHeight/10, screenWidth/20, 0, screenWidth/20)
+	} else {
+		promptStyle = promptStyle.Margin(screenHeight/10, screenWidth/4, 0, screenWidth/4)
+	}
 
 	return promptStyle.Render(viewStyle.Render(lipgloss.JoinVertical(lipgloss.Left, sections...)))
 }

@@ -71,7 +71,7 @@ type keyMap struct {
 var cardKeyMap = keyMap{
 	Back: key.NewBinding(
 		key.WithKeys("esc"),
-		key.WithHelp("esc", "previous page"),
+		key.WithHelp("esc", "prev page"),
 	),
 	Open: key.NewBinding(
 		key.WithKeys("o"),
@@ -136,11 +136,11 @@ func FormKeyMap() keyMap {
 		),
 		Tab: key.NewBinding(
 			key.WithKeys("tab"),
-			key.WithHelp("tab", "previous field"),
+			key.WithHelp("tab", "prev field"),
 		),
 		Back: key.NewBinding(
 			key.WithKeys("esc"),
-			key.WithHelp("esc", "previous page"),
+			key.WithHelp("esc", "prev page"),
 		),
 	}
 }
@@ -181,7 +181,7 @@ func DefaultKeyMap() keyMap {
 		),
 		Back: key.NewBinding(
 			key.WithKeys("esc"),
-			key.WithHelp("esc", "back to previous page"),
+			key.WithHelp("esc", "back to prev page"),
 		),
 		Tab: key.NewBinding(
 			key.WithKeys("tab"),

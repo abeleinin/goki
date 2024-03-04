@@ -147,6 +147,7 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, d.keyMap.Quit):
 			if !d.searching {
+				saveAll()
 				return d, tea.Quit
 			}
 		case key.Matches(msg, d.keyMap.Back):
@@ -224,7 +225,6 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tea.WindowSizeMsg:
 		screenWidth, screenHeight = msg.Width, msg.Height
-		listStyle = listStyle.MarginLeft(3 * screenWidth / 10)
 		cardStyle = cardStyle.MarginLeft(3 * screenWidth / 10).MarginTop(screenHeight / 10).
 			Width(2 * screenWidth / 5).Height(screenHeight / 5)
 	}
@@ -267,11 +267,26 @@ func (d Deck) View() string {
 
 		page := questionStyle.Render(lipgloss.JoinVertical(lipgloss.Center, sections...))
 
+		if screenWidth < 100 {
+			cardStyle = cardStyle.MarginLeft(1 * screenWidth / 10).MarginTop(screenHeight / 10).
+				Width(4 * screenWidth / 5).Height(screenHeight / 5)
+		} else {
+			cardStyle = cardStyle.MarginLeft(3 * screenWidth / 10).MarginTop(screenHeight / 10).
+				Width(2 * screenWidth / 5).Height(screenHeight / 5)
+		}
+
 		if cli {
 			cardStyle = cardStyle.Margin(0)
 		}
 
 		return cardStyle.Render(page)
 	}
+
+	if screenWidth < 90 {
+		listStyle = listStyle.Align(lipgloss.Left).MarginLeft(2)
+	} else {
+		listStyle = listStyle.Align(lipgloss.Left).MarginLeft(3 * screenWidth / 10)
+	}
+
 	return listStyle.Render(d.Cards.View())
 }
