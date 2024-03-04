@@ -184,8 +184,12 @@ func NameToFilename(name string) string {
 }
 
 func (d *Deck) DeleteCardsJson() {
-  err := os.Remove("./cards/" + d.Json)
-  if err != nil {
-    fmt.Println("Error deleting file:", err)
+  filePath := "./cards/" + d.Json
+
+  if _, err := os.Stat(filePath); err == nil {
+    err := os.Remove(filePath)
+    if err != nil {
+      fmt.Println("Error deleting file:", err)
+    }
   }
 }

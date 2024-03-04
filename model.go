@@ -84,7 +84,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
           }
         case key.Matches(msg, u.KeyMap.New):
           if !u.input.Focused() {
-            newDeck := NewDeck("New Deck", "new.json", []list.Item{})
+            newDeck := NewDeck("New Deck", "new_deck.json", []list.Item{})
             u.decks = append(u.decks, newDeck)
             u.table.SetRows(updateRows())
             return u.Update(nil)
@@ -137,6 +137,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
               u.decks[i].RenameCardsJson()
               u.decks[i].saveCards()
             }
+            saveDecks()
             u.del = false
             u.input.Blur()
             u.table.Focus()
@@ -145,6 +146,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
           }
       }
     case tea.WindowSizeMsg:
+      screenHeight, screenWidth = msg.Height, msg.Width
       h, v := docStyle.GetFrameSize()
       docStyle = docStyle.Width(msg.Width - h).Height(msg.Height - v)
     case Form:
@@ -175,12 +177,10 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (u *User) View() string {
   var (
-    sections []string
-    msg = ""
+    sections    []string
+    footer      []string
+    msg         string
   )
-
-  sections = append(sections, logoStyle.Render(gokiLogo))
-  sections = append(sections, u.table.View())
 
   if u.del {
     msg = "Type 'yes' to confirm deletion:"
@@ -188,10 +188,18 @@ func (u *User) View() string {
     msg = "No decks. Press 'N' to create a new deck."
   }
 
-  sections = append(sections, homeFooterStyle.Render(msg))
-  sections = append(sections, homeFooterStyle.Render(u.input.View()))
-  sections = append(sections, homeFooterStyle.Render(u.help.View(u)))
-  sections = append(sections, "")
+  footer = append(footer, homeFooterStyle.Render(msg))
+  footer = append(footer, homeFooterStyle.Render(u.input.View()))
+  footer = append(footer, homeFooterStyle.Render(u.help.View(u) + "\n"))
+  footerStack := lipgloss.JoinVertical(lipgloss.Center, footer...)
+
+  logoHeight := lipgloss.Height(gokiLogo)
+  footerHeight := lipgloss.Height(footerStack)
+  tableStyle = tableStyle.Height(screenHeight - logoHeight - footerHeight - 2)
+
+  sections = append(sections, logoStyle.Render(gokiLogo))
+  sections = append(sections, tableStyle.Render(u.table.View()))
+  sections = append(sections, footerStack)
 
   return docStyle.Render(lipgloss.JoinVertical(lipgloss.Center, sections...))
 }

@@ -22,6 +22,7 @@ var (
   focusedStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
   blurredStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
   docStyle         = lipgloss.NewStyle().Width(100).Height(100).Align(lipgloss.Center)
+  tableStyle       = lipgloss.NewStyle().Height(screenHeight - lipgloss.Height(gokiLogo) - 2)
   homeFooterStyle  = lipgloss.NewStyle().Align(lipgloss.Left).Width(58)
 
   // deck.go
