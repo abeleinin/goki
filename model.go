@@ -125,6 +125,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
             i := u.table.Cursor()
             if u.del {
               if s == "yes" {
+                u.decks[i].DeleteCardsJson()
                 u.decks = append(u.decks[:i], u.decks[i+1:]...)
                 u.table.SetRows(updateRows())
               }
@@ -132,6 +133,9 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
               u.decks[i].Name = s
               u.decks[i].Cards.Title = s
               u.UpdateTable()
+              u.decks[i].DeleteCardsJson()
+              u.decks[i].RenameCardsJson()
+              u.decks[i].saveCards()
             }
             u.del = false
             u.input.Blur()

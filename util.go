@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/table"
@@ -62,7 +64,7 @@ func initInput() {
 func saveAll() {
   saveDecks()
   for _, deck := range currUser.decks {
-    saveCards(deck)
+    deck.saveCards()
   }
 }
 
@@ -74,7 +76,7 @@ func saveDecks() {
   os.WriteFile("./decks/alldecks.json", jsonData, 0644)
 }
 
-func saveCards(d *Deck) {
+func (d *Deck) saveCards() {
   jsonData, err := json.Marshal(d.Cards.Items())
   if err != nil {
       log.Fatal(err)
@@ -171,4 +173,19 @@ func GetScreenDimensions() (int, int) {
       log.Println("Error getting screen dimensions:", err)
   }
   return width, height
+}
+
+func (d *Deck) RenameCardsJson() {
+  d.Json = NameToFilename(d.Name) + ".json"
+}
+
+func NameToFilename(name string) string {
+  return strings.ToLower(strings.ReplaceAll(name, " ", "_"))
+}
+
+func (d *Deck) DeleteCardsJson() {
+  err := os.Remove("./cards/" + d.Json)
+  if err != nil {
+    fmt.Println("Error deleting file:", err)
+  }
 }

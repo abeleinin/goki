@@ -171,7 +171,7 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         }
       case key.Matches(msg, d.keyMap.Save):
         if !d.searching && !d.reviewData.reviewing {
-          saveCards(&d)
+          d.saveCards()
         }
       case key.Matches(msg, d.keyMap.Edit):
         if !d.searching && !d.reviewData.reviewing && len(d.Cards.Items()) > 0 {

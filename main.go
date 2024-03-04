@@ -15,7 +15,7 @@ var (
 
 https://github.com/abeleinin/goki
 
-Usage:
+Usage: goki
   goki                        - tui mode
   goki list                   - view deck index
   goki review <deck index>    - review a deck in cli`)
