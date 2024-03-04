@@ -61,8 +61,8 @@ type keyMap struct {
 	Easy   key.Binding
 	Good   key.Binding
 	Again  key.Binding
-	Save   key.Binding
 	Search key.Binding
+	Undo   key.Binding
 
 	ShowFullHelp  key.Binding
 	CloseFullHelp key.Binding
@@ -109,10 +109,6 @@ func DeckKeyMap() keyMap {
 			key.WithKeys("3"),
 			key.WithHelp("3", "easy"),
 		),
-		Save: key.NewBinding(
-			key.WithKeys("ctrl+s"),
-			key.WithHelp("ctrl+s", "save cards"),
-		),
 		Delete: key.NewBinding(
 			key.WithKeys("d"),
 			key.WithHelp("d", "delete card"),
@@ -124,6 +120,10 @@ func DeckKeyMap() keyMap {
 		Enter: key.NewBinding(
 			key.WithKeys("enter"),
 			key.WithHelp("enter", "search"),
+		),
+		Undo: key.NewBinding(
+			key.WithKeys("u"),
+			key.WithHelp("u", "undo delete"),
 		),
 	}
 }

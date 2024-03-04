@@ -33,10 +33,11 @@ type Deck struct {
 	numReview   int
 	numComplete int
 
-	Name       string     `json:"name"`
-	Json       string     `json:"json"`
-	Cards      list.Model `json:"-"`
-	reviewData ReviewData `json:"-"`
+	Name         string     `json:"name"`
+	Json         string     `json:"json"`
+	Cards        list.Model `json:"-"`
+	reviewData   ReviewData `json:"-"`
+	deletedCards []*Card
 }
 
 func (d Deck) NumNew() string      { return strconv.Itoa(d.numNew) }
@@ -127,7 +128,7 @@ func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
 	}
 
 	d.Cards.AdditionalFullHelpKeys = func() []key.Binding {
-		return []key.Binding{d.keyMap.Edit, d.keyMap.Delete, d.keyMap.New, d.keyMap.Open, d.keyMap.Save}
+		return []key.Binding{d.keyMap.Edit, d.keyMap.Delete, d.keyMap.New, d.keyMap.Open, d.keyMap.Undo}
 	}
 	d.Cards.SetSize(screenWidth-40, screenHeight-4)
 	d.searching = false
@@ -167,12 +168,16 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(msg, d.keyMap.Delete):
 			if !d.searching && !d.reviewData.reviewing {
+				d.deletedCards = append(d.deletedCards, d.Cards.Items()[d.Cards.Index()].(*Card))
 				d.Cards.RemoveItem(d.Cards.Index())
 				return d.Update(nil)
 			}
-		case key.Matches(msg, d.keyMap.Save):
-			if !d.searching && !d.reviewData.reviewing {
-				d.saveCards()
+		case key.Matches(msg, d.keyMap.Undo):
+			size := len(d.deletedCards)
+			if size > 0 && !d.searching && !d.reviewData.reviewing {
+				d.Cards.InsertItem(0, d.deletedCards[size-1])
+				d.deletedCards = d.deletedCards[:size-1]
+				return d.Update(nil)
 			}
 		case key.Matches(msg, d.keyMap.Edit):
 			if !d.searching && !d.reviewData.reviewing && len(d.Cards.Items()) > 0 {
