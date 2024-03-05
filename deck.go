@@ -126,9 +126,8 @@ func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
 		keyMap:     DeckKeyMap(),
 		reviewData: ReviewData{},
 	}
-
 	d.Cards.AdditionalFullHelpKeys = func() []key.Binding {
-		return []key.Binding{d.keyMap.Edit, d.keyMap.Delete, d.keyMap.New, d.keyMap.Open, d.keyMap.Undo}
+		return []key.Binding{d.keyMap.Edit, d.keyMap.Delete, d.keyMap.New, d.keyMap.Undo, d.keyMap.Quit}
 	}
 	d.Cards.SetSize(screenWidth-40, screenHeight-4)
 	d.searching = false
@@ -142,7 +141,7 @@ func (d Deck) Init() tea.Cmd {
 	return nil
 }
 
-func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (d *Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -158,7 +157,9 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else if d.resultsShown {
 				d.resultsShown = false
 			} else {
-				return currUser.Update(d)
+				d.UpdateStatus()
+				currUser.UpdateTable()
+				return currUser.Update(nil)
 			}
 		case key.Matches(msg, d.keyMap.New):
 			if !d.searching && !d.reviewData.reviewing {
@@ -170,6 +171,7 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if !d.searching && !d.reviewData.reviewing {
 				d.deletedCards = append(d.deletedCards, d.Cards.Items()[d.Cards.Index()].(*Card))
 				d.Cards.RemoveItem(d.Cards.Index())
+				d.UpdateStatus()
 				return d.Update(nil)
 			}
 		case key.Matches(msg, d.keyMap.Undo):
@@ -196,14 +198,6 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if !d.searching {
 				if d.reviewData.reviewing {
 					d.reviewData.complete = true
-				} else if d.descShown {
-					ViewFalseDescription()
-					d.descShown = !d.descShown
-					d.Cards.SetDelegate(delegate)
-				} else {
-					ViewTrueDescription()
-					d.descShown = !d.descShown
-					d.Cards.SetDelegate(delegate)
 				}
 				return d.Update(nil)
 			}
@@ -242,8 +236,7 @@ func (d Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			d.reviewData.reviewing = false
 			d.reviewData.complete = false
-			i := currUser.table.Cursor()
-			currUser.decks[i].UpdateStatus()
+			d.UpdateStatus()
 			currUser.UpdateTable()
 			return currUser.Update(nil)
 		} else {

@@ -31,7 +31,7 @@ func (d Deck) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{d.keyMap.New, d.keyMap.Edit, d.keyMap.Delete, d.keyMap.Up},
 		{d.keyMap.Down, d.keyMap.Enter, d.keyMap.Help, d.keyMap.Quit},
-		{d.keyMap.Back, d.keyMap.Tab, d.keyMap.Review, d.keyMap.Open},
+		{d.keyMap.Back, d.keyMap.Tab, d.keyMap.Review},
 	}
 }
 
@@ -95,7 +95,7 @@ func DeckKeyMap() keyMap {
 		),
 		Open: key.NewBinding(
 			key.WithKeys("o"),
-			key.WithHelp("o", "hide/show description"),
+			key.WithHelp("o", "show back"),
 		),
 		Again: key.NewBinding(
 			key.WithKeys("1"),
@@ -124,6 +124,10 @@ func DeckKeyMap() keyMap {
 		Undo: key.NewBinding(
 			key.WithKeys("u"),
 			key.WithHelp("u", "undo delete"),
+		),
+		Quit: key.NewBinding(
+			key.WithKeys("q", "ctrl+c"),
+			key.WithHelp("q/ctrl+c", "quit"),
 		),
 	}
 }

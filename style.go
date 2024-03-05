@@ -14,7 +14,6 @@ const gokiLogo = `   ________        __    __
          \/            \/   `
 
 var (
-	delegate                  *list.DefaultDelegate
 	screenWidth, screenHeight = GetScreenDimensions()
 
 	// model.go
@@ -28,14 +27,14 @@ var (
 	// deck.go
 	cardStyle = lipgloss.NewStyle().MarginTop(screenHeight / 10).MarginLeft(3 * screenWidth / 10).Width(2 * screenWidth / 5).
 			Height(screenHeight / 5).Border(lipgloss.RoundedBorder()).Align(lipgloss.Center)
-	listStyle       = lipgloss.NewStyle().Align(lipgloss.Left).MarginLeft(40).Padding(2)
+	listStyle       = lipgloss.NewStyle().Align(lipgloss.Left).MarginLeft(35 * screenWidth / 100).Padding(2)
 	questionStyle   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10")).MarginTop(2)
 	answerStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("15")).MarginTop(4).MarginBottom(4)
 	deckFooterStyle = lipgloss.NewStyle().MarginTop(10)
 
 	// form.go
 	formTitleStyle  = lipgloss.NewStyle().Background(lipgloss.Color("62")).Foreground(lipgloss.Color("230")).Padding(0, 1).MarginTop(1).Render
-	formStyle       = lipgloss.NewStyle().Align(lipgloss.Center).Margin(screenHeight/10, 3*screenWidth/10, 0, 3*screenWidth/10).Padding(2, 2)
+	formStyle       = lipgloss.NewStyle().Align(lipgloss.Center).Margin(screenHeight/10, screenWidth/4, 0, screenWidth/4).Padding(2, 2)
 	viewStyle       = lipgloss.NewStyle().Width(2*screenWidth/5).Border(lipgloss.RoundedBorder()).Padding(0, 2)
 	formFooterStyle = lipgloss.NewStyle().Align(lipgloss.Center).PaddingTop(2)
 	pad             = lipgloss.NewStyle().PaddingTop(1).Render
@@ -46,21 +45,12 @@ var (
 )
 
 func InitCustomDelegate() list.DefaultDelegate {
-	temp := list.DefaultDelegate{}
-	temp.ShowDescription = true
-	temp.Styles = CustomItemStyles()
-	temp.SetHeight(2)
-	temp.SetSpacing(1)
-	delegate = &temp
-	return temp
-}
-
-func ViewTrueDescription() {
+	delegate := list.DefaultDelegate{}
 	delegate.ShowDescription = true
-}
-
-func ViewFalseDescription() {
-	delegate.ShowDescription = false
+	delegate.Styles = CustomItemStyles()
+	delegate.SetHeight(2)
+	delegate.SetSpacing(1)
+	return delegate
 }
 
 func CustomItemStyles() (s list.DefaultItemStyles) {

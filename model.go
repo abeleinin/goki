@@ -159,11 +159,6 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			u.decks[i].UpdateStatus()
 		}
 		return u.decks[i].Update(nil)
-	case Deck:
-		i := currUser.table.Cursor()
-		u.decks[i].UpdateStatus()
-		u.UpdateTable()
-		return u.Update(nil)
 	}
 
 	if u.input.Focused() {

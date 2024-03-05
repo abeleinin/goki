@@ -29,6 +29,7 @@ func NewForm(question, answer string) *Form {
 		question: textarea.New(),
 		answer:   textarea.New(),
 		keyMap:   FormKeyMap(),
+		edit:     false,
 	}
 	fc.question.ShowLineNumbers = false
 	fc.answer.ShowLineNumbers = false
@@ -47,6 +48,7 @@ func EditForm(question, answer string) *Form {
 		question: textarea.New(),
 		answer:   textarea.New(),
 		keyMap:   FormKeyMap(),
+		edit:     false,
 	}
 	fc.question.ShowLineNumbers = false
 	fc.answer.ShowLineNumbers = false
@@ -129,8 +131,8 @@ func (f Form) View() string {
 		viewStyle = viewStyle.Width(9 * screenWidth / 10)
 		formStyle = formStyle.Margin(screenHeight/10, screenWidth/20, 0, screenWidth/20)
 	} else {
-		viewStyle = viewStyle.Width(2 * screenWidth / 5)
-		formStyle = formStyle.Margin(screenHeight/10, 3*screenWidth/10, 0, 3*screenWidth/10)
+		viewStyle = viewStyle.Width(screenWidth / 2)
+		formStyle = formStyle.Margin(screenHeight/10, screenWidth/4, 0, screenWidth/4)
 	}
 
 	return formStyle.Render(viewStyle.Render(lipgloss.JoinVertical(lipgloss.Left, sections...)))
