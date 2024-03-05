@@ -127,7 +127,7 @@ func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
 		reviewData: ReviewData{},
 	}
 	d.Cards.AdditionalFullHelpKeys = func() []key.Binding {
-		return []key.Binding{d.keyMap.Edit, d.keyMap.Delete, d.keyMap.New, d.keyMap.Undo, d.keyMap.Quit}
+		return []key.Binding{d.keyMap.New, d.keyMap.Edit, d.keyMap.Delete, d.keyMap.Undo, d.keyMap.Quit}
 	}
 	d.Cards.SetSize(screenWidth-40, screenHeight-4)
 	d.searching = false
@@ -282,11 +282,7 @@ func (d Deck) View() string {
 		return cardStyle.Render(page)
 	}
 
-	if screenWidth < 100 {
-		listStyle = listStyle.Align(lipgloss.Left).MarginLeft(screenWidth / 20)
-	} else {
-		listStyle = listStyle.Align(lipgloss.Left).MarginLeft(35 * screenWidth / 100)
-	}
+	listStyle = listStyle.Align(lipgloss.Left).MarginLeft((screenWidth - 60) / 2)
 
 	return listStyle.Render(d.Cards.View())
 }

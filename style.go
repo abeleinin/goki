@@ -27,7 +27,7 @@ var (
 	// deck.go
 	cardStyle = lipgloss.NewStyle().MarginTop(screenHeight / 10).MarginLeft(3 * screenWidth / 10).Width(2 * screenWidth / 5).
 			Height(screenHeight / 5).Border(lipgloss.RoundedBorder()).Align(lipgloss.Center)
-	listStyle       = lipgloss.NewStyle().Align(lipgloss.Left).MarginLeft(35 * screenWidth / 100).Padding(2)
+	listStyle       = lipgloss.NewStyle().Align(lipgloss.Left).MarginLeft((screenWidth - 60) / 2).Padding(2)
 	questionStyle   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10")).MarginTop(2)
 	answerStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("15")).MarginTop(4).MarginBottom(4)
 	deckFooterStyle = lipgloss.NewStyle().MarginTop(10)
