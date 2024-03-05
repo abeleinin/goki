@@ -6,6 +6,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/user"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -74,7 +76,7 @@ func saveDecks() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	os.WriteFile("./decks/alldecks.json", jsonData, 0644)
+	os.WriteFile(appDir+"/decks.json", jsonData, 0644)
 }
 
 func (d *Deck) saveCards() {
@@ -82,13 +84,34 @@ func (d *Deck) saveCards() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	os.WriteFile("./cards/"+d.Json, jsonData, 0644)
+	os.WriteFile(appDir+"/cards/"+d.Json, jsonData, 0644)
+}
+
+func createFolders() string {
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	appDir := filepath.Join(usr.HomeDir, ".local", "share", "goki")
+
+	cardsDir := filepath.Join(appDir, "cards")
+
+	if err := os.MkdirAll(appDir, 0755); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := os.MkdirAll(cardsDir, 0755); err != nil {
+		log.Fatal(err)
+	}
+	return appDir
 }
 
 func loadDecks() {
-	d := readDecks("./decks/alldecks.json")
+	appDir = createFolders()
+	d := readDecks(appDir + "/decks.json")
 	for _, curr := range d {
-		cards := readCards("./cards/" + curr.Json)
+		cards := readCards(appDir + "/cards/" + curr.Json)
 		deck := NewDeck(curr.Name, curr.Json, cards)
 		currUser.decks = append(currUser.decks, deck)
 	}
@@ -97,9 +120,21 @@ func loadDecks() {
 func readDecks(fileName string) []*Deck {
 	file, err := os.Open(fileName)
 	if err != nil {
-		log.Fatalf("Error opening file: %s", err)
+		file, err = os.Create(fileName)
+		if err != nil {
+			log.Fatalf("Error creating file: %s", err)
+		}
+		defer file.Close()
+		if err := json.NewEncoder(file).Encode([]interface{}{}); err != nil {
+			log.Fatalf("Error writing to decks.json: %s", err)
+		}
+		_, err = file.Seek(0, 0)
+		if err != nil {
+			log.Fatalf("Error seeking file: %s", err)
+		}
+	} else {
+		defer file.Close()
 	}
-	defer file.Close()
 
 	byteValue, err := io.ReadAll(file)
 	if err != nil {
@@ -185,7 +220,7 @@ func NameToFilename(name string) string {
 }
 
 func (d *Deck) DeleteCardsJson() {
-	filePath := "./cards/" + d.Json
+	filePath := appDir + "/cards/" + d.Json
 
 	if _, err := os.Stat(filePath); err == nil {
 		err := os.Remove(filePath)

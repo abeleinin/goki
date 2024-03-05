@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	appDir   string
 	helpText = strings.TrimSpace(`
 
 https://github.com/abeleinin/goki
@@ -73,10 +74,14 @@ func ReviewCLI(s string) {
 	}
 	cli = true
 	currUser.decks[i].StartReview()
-	p := tea.NewProgram(currUser.decks[i])
-	if _, err := p.Run(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	if len(currUser.decks[i].reviewData.reviewCards) > 0 {
+		p := tea.NewProgram(currUser.decks[i])
+		if _, err := p.Run(); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	} else {
+		fmt.Println("No cards to review in the deck: " + currUser.decks[i].Name + ".")
 	}
 }
 
