@@ -44,7 +44,12 @@ func runCLI(args []string) {
 			fmt.Println(gokiLogo)
 			fmt.Println(helpText)
 		case "review":
-			ReviewCLI(args[1])
+			if len(args) > 1 {
+				ReviewCLI(args[1])
+			} else {
+				fmt.Println("Not enough args to run 'goki review <deck index>.'")
+				fmt.Println("Use 'goki list' to view deck index.")
+			}
 		default:
 			fmt.Print(args[0], " is not a valid command. Use 'goki -' for more information.")
 		}

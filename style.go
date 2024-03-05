@@ -34,6 +34,7 @@ var (
 	deckFooterStyle = lipgloss.NewStyle().MarginTop(10)
 
 	// form.go
+	formTitleStyle  = lipgloss.NewStyle().Background(lipgloss.Color("62")).Foreground(lipgloss.Color("230")).Padding(0, 1).MarginTop(1).Render
 	formStyle       = lipgloss.NewStyle().Align(lipgloss.Center).Margin(screenHeight/10, 3*screenWidth/10, 0, 3*screenWidth/10).Padding(2, 2)
 	viewStyle       = lipgloss.NewStyle().Width(2*screenWidth/5).Border(lipgloss.RoundedBorder()).Padding(0, 2)
 	formFooterStyle = lipgloss.NewStyle().Align(lipgloss.Center).PaddingTop(2)

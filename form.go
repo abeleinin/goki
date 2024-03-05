@@ -114,10 +114,14 @@ func (f Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (f Form) View() string {
 	var sections []string
 
-	sections = append(sections, pad("Create new card:"))
-	sections = append(sections, pad("Card Front:"))
+	if f.edit {
+		sections = append(sections, formTitleStyle("Edit Card"))
+	} else {
+		sections = append(sections, formTitleStyle("Create Card"))
+	}
+	sections = append(sections, pad("Front:"))
 	sections = append(sections, f.question.View())
-	sections = append(sections, pad("Card Back:"))
+	sections = append(sections, pad("Back:"))
 	sections = append(sections, f.answer.View())
 	sections = append(sections, formFooterStyle.Render(f.help.View(f)))
 

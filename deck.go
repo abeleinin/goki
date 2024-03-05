@@ -289,10 +289,10 @@ func (d Deck) View() string {
 		return cardStyle.Render(page)
 	}
 
-	if screenWidth < 90 {
-		listStyle = listStyle.Align(lipgloss.Left).MarginLeft(2)
+	if screenWidth < 100 {
+		listStyle = listStyle.Align(lipgloss.Left).MarginLeft(screenWidth / 20)
 	} else {
-		listStyle = listStyle.Align(lipgloss.Left).MarginLeft(3 * screenWidth / 10)
+		listStyle = listStyle.Align(lipgloss.Left).MarginLeft(35 * screenWidth / 100)
 	}
 
 	return listStyle.Render(d.Cards.View())
