@@ -4,7 +4,6 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -13,8 +12,8 @@ type Form struct {
 	keyMap keyMap
 
 	help     help.Model
-	question textinput.Model
-	answer   textinput.Model
+	question textarea.Model
+	answer   textarea.Model
 
 	index int
 	edit  bool
@@ -27,10 +26,14 @@ func newDefaultForm() *Form {
 func NewForm(question, answer string) *Form {
 	fc := Form{
 		help:     help.New(),
-		question: textinput.New(),
-		answer:   textinput.New(),
+		question: textarea.New(),
+		answer:   textarea.New(),
 		keyMap:   FormKeyMap(),
 	}
+	fc.question.ShowLineNumbers = false
+	fc.answer.ShowLineNumbers = false
+	fc.question.SetHeight(3)
+	fc.answer.SetHeight(3)
 	fc.help.ShowAll = false
 	fc.question.Placeholder = question
 	fc.answer.Placeholder = answer
@@ -41,10 +44,14 @@ func NewForm(question, answer string) *Form {
 func EditForm(question, answer string) *Form {
 	fc := Form{
 		help:     help.New(),
-		question: textinput.New(),
-		answer:   textinput.New(),
+		question: textarea.New(),
+		answer:   textarea.New(),
 		keyMap:   FormKeyMap(),
 	}
+	fc.question.ShowLineNumbers = false
+	fc.answer.ShowLineNumbers = false
+	fc.question.SetHeight(3)
+	fc.answer.SetHeight(3)
 	fc.help.ShowAll = false
 	fc.question.SetValue(question)
 	fc.answer.SetValue(answer)
@@ -53,12 +60,16 @@ func EditForm(question, answer string) *Form {
 }
 
 func (f Form) EditCard(card *Card) {
-	card.Front = f.question.Value()
-	card.Back = f.answer.Value()
+	front := WrapString(f.question.Value(), 40)
+	back := WrapString(f.answer.Value(), 40)
+	card.Front = front
+	card.Back = back
 }
 
 func (f Form) CreateCard() *Card {
-	return NewCard(f.question.Value(), f.answer.Value())
+	front := WrapString(f.question.Value(), 40)
+	back := WrapString(f.answer.Value(), 40)
+	return NewCard(front, back)
 }
 
 func (f Form) Init() tea.Cmd {
@@ -77,14 +88,14 @@ func (f Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if f.question.Focused() {
 				f.question.Blur()
 				f.answer.Focus()
-				return f, textarea.Blink
+				return f.Update(nil)
 			}
 			return currUser.Update(f)
 		case key.Matches(msg, f.keyMap.Tab):
 			if f.answer.Focused() {
 				f.answer.Blur()
 				f.question.Focus()
-				return f, textarea.Blink
+				return f.Update(nil)
 			}
 		}
 	case tea.WindowSizeMsg:
@@ -103,16 +114,20 @@ func (f Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (f Form) View() string {
 	var sections []string
 
-	sections = append(sections, "Create new card:")
+	sections = append(sections, pad("Create new card:"))
+	sections = append(sections, pad("Card Front:"))
 	sections = append(sections, f.question.View())
+	sections = append(sections, pad("Card Back:"))
 	sections = append(sections, f.answer.View())
 	sections = append(sections, formFooterStyle.Render(f.help.View(f)))
 
 	if screenWidth < 100 {
-		promptStyle = promptStyle.Margin(screenHeight/10, screenWidth/20, 0, screenWidth/20)
+		viewStyle = viewStyle.Width(9 * screenWidth / 10)
+		formStyle = formStyle.Margin(screenHeight/10, screenWidth/20, 0, screenWidth/20)
 	} else {
-		promptStyle = promptStyle.Margin(screenHeight/10, screenWidth/4, 0, screenWidth/4)
+		viewStyle = viewStyle.Width(2 * screenWidth / 5)
+		formStyle = formStyle.Margin(screenHeight/10, 3*screenWidth/10, 0, 3*screenWidth/10)
 	}
 
-	return promptStyle.Render(viewStyle.Render(lipgloss.JoinVertical(lipgloss.Left, sections...)))
+	return formStyle.Render(viewStyle.Render(lipgloss.JoinVertical(lipgloss.Left, sections...)))
 }

@@ -260,10 +260,12 @@ func (d Deck) View() string {
 	if d.reviewData.reviewing {
 		var sections []string
 
-		sections = append(sections, d.reviewData.curr.Front)
+		front := WrapString(d.reviewData.curr.Front, 40)
+		sections = append(sections, front)
 
 		if d.reviewData.complete {
-			sections = append(sections, answerStyle.Render(d.reviewData.curr.Back))
+			back := WrapString(d.reviewData.curr.Back, 40)
+			sections = append(sections, answerStyle.Render(back))
 			sections = append(sections, helpKeyColor.Render("Card Difficulty:"))
 			sections = append(sections, lipgloss.NewStyle().Inline(true).Render(d.help.View(d)))
 		} else {
@@ -281,7 +283,7 @@ func (d Deck) View() string {
 		}
 
 		if cli {
-			cardStyle = cardStyle.Margin(0)
+			cardStyle = cardStyle.Margin(0, 0, 1)
 		}
 
 		return cardStyle.Render(page)

@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -192,4 +193,33 @@ func (d *Deck) DeleteCardsJson() {
 			fmt.Println("Error deleting file:", err)
 		}
 	}
+}
+
+func WrapString(input string, maxWidth int) string {
+	if maxWidth < 1 {
+		return input
+	}
+
+	var result strings.Builder
+	re := regexp.MustCompile(`(\S+ +)|\S+`)
+	words := re.FindAllString(input, -1)
+	currentLineLength := 0
+
+	for _, word := range words {
+		wordLength := len(word)
+		spaceNeeded := wordLength
+		if currentLineLength > 0 {
+			spaceNeeded++
+		}
+
+		if currentLineLength+spaceNeeded > maxWidth {
+			result.WriteString("\n")
+			currentLineLength = 0
+		}
+
+		result.WriteString(word)
+		currentLineLength += wordLength
+	}
+
+	return result.String()
 }

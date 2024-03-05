@@ -34,10 +34,10 @@ var (
 	deckFooterStyle = lipgloss.NewStyle().MarginTop(10)
 
 	// form.go
-	promptStyle = lipgloss.NewStyle().Align(lipgloss.Center).
-			Margin(screenHeight/10, screenWidth/4, 0, screenWidth/4).Padding(2, 2)
-	viewStyle       = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).Padding(2, 2, 0, 2)
+	formStyle       = lipgloss.NewStyle().Align(lipgloss.Center).Margin(screenHeight/10, 3*screenWidth/10, 0, 3*screenWidth/10).Padding(2, 2)
+	viewStyle       = lipgloss.NewStyle().Width(2*screenWidth/5).Border(lipgloss.RoundedBorder()).Padding(0, 2)
 	formFooterStyle = lipgloss.NewStyle().Align(lipgloss.Center).PaddingTop(2)
+	pad             = lipgloss.NewStyle().PaddingTop(1).Render
 
 	// other
 	helpKeyColor  = help.New().Styles.ShortKey.Inline(true)
@@ -64,10 +64,10 @@ func ViewFalseDescription() {
 
 func CustomItemStyles() (s list.DefaultItemStyles) {
 	s.NormalTitle = helpKeyColor.
-		Padding(0, 0, 0, 1)
+		Padding(0, 0, 0, 1).Inline(false)
 
 	s.NormalDesc = helpDescColor.
-		Padding(0, 0, 0, 1)
+		Padding(0, 0, 0, 1).Inline(false)
 
 	s.SelectedTitle = lipgloss.NewStyle().
 		Bold(true).
