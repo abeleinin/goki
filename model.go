@@ -85,6 +85,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, u.KeyMap.New):
 			if !u.input.Focused() {
 				newDeck := NewDeck("New Deck", "new_deck.json", []list.Item{})
+				newDeck.RenameCardsJson()
 				u.decks = append(u.decks, newDeck)
 				u.table.SetRows(updateRows())
 				return u.Update(nil)

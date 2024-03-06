@@ -15,6 +15,7 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/google/uuid"
 	"golang.org/x/term"
 )
 
@@ -212,7 +213,8 @@ func GetScreenDimensions() (int, int) {
 }
 
 func (d *Deck) RenameCardsJson() {
-	d.Json = NameToFilename(d.Name) + ".json"
+	id := uuid.New()
+	d.Json = fmt.Sprintf("%s_%s%s", NameToFilename(d.Name), id, ".json")
 }
 
 func NameToFilename(name string) string {
