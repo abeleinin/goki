@@ -71,7 +71,7 @@ type keyMap struct {
 var cardKeyMap = keyMap{
 	Back: key.NewBinding(
 		key.WithKeys("esc"),
-		key.WithHelp("esc", "prev page"),
+		key.WithHelp("esc", "exit review"),
 	),
 	Open: key.NewBinding(
 		key.WithKeys("o"),
