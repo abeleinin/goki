@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"os"
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -259,4 +261,22 @@ func WrapString(input string, maxWidth int) string {
 	}
 
 	return result.String()
+}
+
+func PrintDecks() {
+	var section []string
+	section = append(section, "\nDecks:")
+	for i, deck := range currUser.decks {
+		numDigits := 1
+		if i > 9 {
+			numDigits = int(math.Log10(float64(i))) + 1
+		}
+
+		spaces := 5 - numDigits
+		spaceStr := strings.Repeat(" ", spaces)
+
+		section = append(section, spaceStr+strconv.Itoa(i)+". "+deck.Name)
+	}
+	section = append(section, "\nuse 'goki review <deck index>' to review a deck.\n")
+	fmt.Println(lipgloss.JoinVertical(lipgloss.Left, section...))
 }

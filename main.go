@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 var (
@@ -83,14 +82,4 @@ func ReviewCLI(s string) {
 	} else {
 		fmt.Println("No cards to review in the deck: " + currUser.decks[i].Name + ".")
 	}
-}
-
-func PrintDecks() {
-	var section []string
-	section = append(section, "\nDecks:\n")
-	for i, deck := range currUser.decks {
-		section = append(section, strconv.Itoa(i)+". "+deck.Name)
-	}
-	section = append(section, "use 'goki review <deck index>' to review a deck.\n")
-	fmt.Println(lipgloss.JoinVertical(lipgloss.Left, section...))
 }
