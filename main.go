@@ -18,7 +18,7 @@ https://github.com/abeleinin/goki
 Usage: goki
   goki                        - tui mode
   goki list                   - view deck index
-  goki review <deck index>    - review a deck in cli`)
+  goki review <deck index>    - review deck from cli`)
 )
 
 var currUser *User
@@ -40,7 +40,7 @@ func runCLI(args []string) {
 		switch args[0] {
 		case "list":
 			PrintDecks()
-		case "-h", "--help":
+		case "-h", "--help", "help":
 			fmt.Println(gokiLogo)
 			fmt.Println(helpText)
 		case "review":
@@ -51,7 +51,7 @@ func runCLI(args []string) {
 				fmt.Println("Use 'goki list' to view deck index.")
 			}
 		default:
-			fmt.Print(args[0], " is not a valid command. Use 'goki -' for more information.")
+			fmt.Print(args[0], " is not a valid command. Use 'goki -h' for more information.")
 		}
 		return
 	}
