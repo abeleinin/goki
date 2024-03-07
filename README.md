@@ -69,7 +69,7 @@ Launch by running `goki`:
 </details>
 
 <details>
-<summary>Flash Card</summary>
+<summary>Flashcard</summary>
 
 | Action      | Keybinding |
 |-------------|------------|
