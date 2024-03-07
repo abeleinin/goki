@@ -14,13 +14,18 @@ Goki is an intelligent flashcard management tool inspired by
 - [TUI Demo](#tui-demo)
 - [Key Mappings](#key-mappings)
 - [Installation](#installation)
-- [Tutorial](#tutorial)
+- [Examples](#examples)
 - [Commands](#commands)
 - [Resources](#resources)
 
 ## TUI Demo
 
 Launch by running `goki`:
+
+https://github.com/abeleinin/goki/assets/95333017/91d46c80-6580-4550-b6c2-405342a48290
+
+Goki features a [Spaced Repetion Algorithm](https://en.wikipedia.org/wiki/Spaced_repetition)
+which uses user feedback on card difficulty to effectively space out practice sessions.
 
 ## Key Mappings
 
@@ -58,6 +63,7 @@ Launch by running `goki`:
 
 </details>
 
+<details>
 <summary>Create/Edit Flashcard Form</summary>
 
 | Action         | Keybinding |
@@ -81,9 +87,6 @@ Launch by running `goki`:
 
 </details>
 
-Goki features a [Spaced Repetion Algorithm](https://en.wikipedia.org/wiki/Spaced_repetition)
-which uses user feedback on card difficulty efficienty plans for the next study time. 
-
 ## Installation
 
 Using `go`:
@@ -100,10 +103,20 @@ cd goki
 go build
 ```
 
-## Tutorial
+## Examples
 
-Refer the the `help` command or TUI help menu by pressing `?` for more info
-on avaiable actions.
+### Reviewing Flashcards
+
+Press `r` on the selected deck you want to review on the home page. Or
+use the command `goki review <deck index>` to review from the CLI.
+
+**Review from CLI:**
+
+![Review deck in cli](img/review_cli.gif)
+
+**Review from TUI:**
+
+![Review deck in tui](img/review.gif)
 
 ### Creating Decks
 
@@ -111,24 +124,11 @@ Press `N` in the home page. Use `e` to edit the currently selected deck.
 
 ![Create new deck](img/create_deck.gif)
 
-### Creating Cards
+### Creating Flashcards
 
 Press `o` to view the cards in a deck. Press `n` to create a new card.
 
 ![Create new flashcard](img/create_card.gif)
-
-### Reviewing Cards
-
-Press `r` on the selected deck you want to review on the home page. Or
-use the command `goki review <deck index>` to review from the CLI.
-
-**Review from TUI:**
-
-![Review deck in tui](img/review.gif)
-
-**Review from CLI:**
-
-![Review deck in cli](img/review_cli.gif)
 
 ## Commands
 
