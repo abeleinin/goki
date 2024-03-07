@@ -9,15 +9,80 @@ Theme: [material default-community](https://github.com/kaicataldo/material.vim)
 Goki is an intelligent flashcard management tool inspired by 
 [Anki](https://apps.ankiweb.net/) built in the terminal!
 
-Goki features a [Spaced Repetion Algorithm](https://en.wikipedia.org/wiki/Spaced_repetition)
-which uses user feedback on card difficulty efficienty plans for the next study time. 
-
 ## Table of contents
 
+- [TUI Demo](#tui-demo)
+- [Key Mappings](#key-mappings)
 - [Installation](#installation)
 - [Tutorial](#tutorial)
 - [Commands](#commands)
 - [Resources](#resources)
+
+## TUI Demo
+
+Launch by running `goki`:
+
+## Key Mappings
+
+<details>
+<summary>Home Page</summary>
+
+| Action       | Keybinding |
+|--------------|------------|
+| Review Decks Flashcards | `r`        |
+| Create New Deck         | `N`        |
+| View Deck Card List     | `o`        |
+| Edit Deck Name          | `e`        |
+| Delete Deck      | `d`        |
+| Move Up          | `up arrow`,`k`      |
+| Move Down        | `down arrow`,`j`      |
+| Toggle Help Menu      | `?`        |
+| Quit             | `q`,`ctrl+c` |
+
+</details>
+
+<details>
+<summary>Flashcard List Page</summary>
+
+| Action           | Keybinding |
+|------------------|------------|
+| Move Up          | `up arrow`,`k`      |
+| Move Down        | `down arrow`,`j`      |
+| Next page        | `right arrow`,`l`      |
+| Previous Page    | `left arrow`,`h`      |
+| Search Flashcards | `/`        |
+| New Card     | `n`        |
+| Edit Card    | `e`        |
+| Delete Card  | `d`        |
+| Undo Deleted Card | `u`    |
+
+</details>
+
+<summary>Create/Edit Flashcard Form</summary>
+
+| Action         | Keybinding |
+|----------------|------------|
+| Next Field / Submit | `enter`    |
+| Previous Field      | `tab`      |
+| Exit Form           | `esc`      |
+
+</details>
+
+<details>
+<summary>Flash Card</summary>
+
+| Action      | Keybinding |
+|-------------|------------|
+| Exit Review | `esc`      |
+| Show Back   | `o`        |
+| Flashcard needs repeated again | `1`        |
+| Flashcard took some thought | `2`        |
+| Flashcard was easy to remember | `3`        |
+
+</details>
+
+Goki features a [Spaced Repetion Algorithm](https://en.wikipedia.org/wiki/Spaced_repetition)
+which uses user feedback on card difficulty efficienty plans for the next study time. 
 
 ## Installation
 
