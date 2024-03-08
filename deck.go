@@ -126,6 +126,8 @@ func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
 		keyMap:     DeckKeyMap(),
 		reviewData: ReviewData{},
 	}
+	// Todo: Remove json param
+	d.RenameCardsJson()
 	d.Cards.AdditionalFullHelpKeys = func() []key.Binding {
 		return []key.Binding{d.keyMap.New, d.keyMap.Edit, d.keyMap.Delete, d.keyMap.Undo, d.keyMap.Quit}
 	}

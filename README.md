@@ -1,6 +1,8 @@
 # Goki
 
-A terminal-based spaced repetition flashcard tool.
+A terminal-based spaced repetition flashcard tool. 
+
+**Now supports importing decks from Anki!**
 
 ![Screenshot example of Goki](img/goki_main.png)
 
@@ -15,6 +17,10 @@ Goki is an intelligent flashcard management tool inspired by
 - [Key Mappings](#key-mappings)
 - [Installation](#installation)
 - [Examples](#examples)
+    - [Import Flashcards](#import-from-csv)
+    - [Reviewing Flashcards](#reviewing-flashcards)
+    - [Creating Decks](#creating-decks)
+    - [Creating Flashcards](#creating-flashcards)
 - [Commands](#commands)
 - [Resources](#resources)
 
@@ -105,6 +111,38 @@ go build
 
 ## Examples
 
+### Import from CSV
+
+![Import from stdin](img/import.gif)
+
+Using the pipe operator `<` to feed flashcard data in as `stdin`. Apply 
+a custom name with the `-n` flag, or a default name will be assigned.
+`-t` flag assigns the data seperation character, comma `,` separation
+is the default.
+
+```
+goki < flashcards.csv                      # default sep=','
+goki -t < flashcards.txt                   # use -t to set sep='\t'
+goki -n "My Deck Name" < flashcards.csv
+goki -n "My Deck Name" -t < flashcards.txt
+```
+
+Here is an example of data formatting. Only rows with 2 elements 
+will be parsed, the first as the question and second as answer.
+
+```
+"Question","Answer"
+Question    Answer
+```
+
+### Import from Anki
+
+Export as `Notes in Plain Text (.txt)` in Anki, which generates a tab `\t` separated text file. Run the follow on the exported file.
+
+```
+goki -n "My Anki Cards" -t < anki.txt
+```
+
 ### Reviewing Flashcards
 
 Press `r` on the selected deck you want to review on the home page. Or
@@ -133,14 +171,21 @@ Press `o` to view the cards in a deck. Press `n` to create a new card.
 ## Commands
 
 ```
-Usage: goki
-  goki                        - tui mode
-  goki list                   - view deck index
-  goki review <deck index>    - review deck from cli`)
+Usage:
+  goki                      - tui mode
+  goki list                 - view deck index
+  goki review <deck index>  - review deck from cli
+		
+Create:
+  opt:                 - optional flags
+    -n "deck name"     - assigned deck name to imported cards
+    -t                 - assigns tab sep (default sep=',')
+
+  goki opt < deck.txt  - import deck in using stdin
 ```
 
 ## Resources
 
 - [Augmenting Long-term Memory ](https://augmentingcognition.com/ltm.html) by Michael Nielsen, Y Combinator Research, July 2018
-- Created using [Charm](https://charm.sh/).
+- Created using [Charm](https://charm.sh/)
 

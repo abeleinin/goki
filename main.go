@@ -10,19 +10,30 @@ import (
 )
 
 var (
-	appDir   string
+	currUser *User
+
+	appDir  string
+	csvName string
+	cli     bool
+
+	sep = ','
+
 	helpText = strings.TrimSpace(`
 
 https://github.com/abeleinin/goki
 
-Usage: goki
-  goki                        - tui mode
-  goki list                   - view deck index
-  goki review <deck index>    - review deck from cli`)
-)
+Usage:
+  goki                      - tui mode
+  goki list                 - view deck index
+  goki review <deck index>  - review deck from cli
+		
+Create:
+  opt:                 - optional flags
+    -n "deck name"     - assigned deck name to imported cards
+    -t                 - assigns tab sep (default sep=',')
 
-var currUser *User
-var cli bool
+  goki opt < deck.txt  - import deck in using stdin`)
+)
 
 func main() {
 	runCLI(os.Args[1:])
@@ -50,9 +61,39 @@ func runCLI(args []string) {
 				fmt.Println("Not enough args to run 'goki review <deck index>.'")
 				fmt.Println("Use 'goki list' to view deck index.")
 			}
+		case "-n":
+			if len(args) > 1 {
+				csvName = args[1]
+			} else {
+				fmt.Println("Please provide a deck name.")
+				fmt.Println("Use 'goki help' for more info.")
+			}
+		case "-t":
+			{
+				sep = '\t'
+			}
 		default:
 			fmt.Print(args[0], " is not a valid command. Use 'goki -h' for more information.")
 		}
+
+		if len(args) < 2 {
+			return
+		}
+
+		if sep == 0 {
+			for _, arg := range args[1:] {
+				if arg == "-t" {
+					sep = '\t'
+					break
+				}
+			}
+		}
+	}
+
+	response := readDeckStdin(sep)
+
+	if response != "" {
+		fmt.Println(response)
 		return
 	}
 

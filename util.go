@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -277,6 +278,52 @@ func PrintDecks() {
 
 		section = append(section, spaceStr+strconv.Itoa(i)+". "+deck.Name)
 	}
-	section = append(section, "\nuse 'goki review <deck index>' to review a deck.\n")
+	if len(currUser.decks) == 0 {
+		section = append(section, "    No decks. Use 'N' in TUI or import from stdin.\n")
+	} else {
+		section = append(section, "\nuse 'goki review <deck index>' to review a deck.\n")
+	}
 	fmt.Println(lipgloss.JoinVertical(lipgloss.Left, section...))
+}
+
+func readDeckStdin(sep rune) string {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return ""
+	}
+
+	if stat.Mode()&os.ModeCharDevice != 0 {
+		return ""
+	}
+
+	var cards []list.Item
+	reader := csv.NewReader(os.Stdin)
+	reader.Comma = sep
+	for {
+		record, err := reader.Read()
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+		}
+
+		if len(record) == 2 {
+			question, answer := record[0], record[1]
+			newCard := NewCard(question, answer)
+			cards = append(cards, newCard)
+		} else if len(record) > 2 {
+			fmt.Println("Incorrect format: record rows must have exactly 2 fields.")
+		}
+	}
+
+	var deck *Deck
+	if csvName != "" {
+		deck = NewDeck(csvName, "stdin.json", cards)
+	} else {
+		deck = NewDeck("Loaded Deck", "stdin.json", cards)
+	}
+	currUser.decks = append(currUser.decks, deck)
+	saveAll()
+
+	return "Import successful!"
 }
