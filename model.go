@@ -130,7 +130,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						u.decks = append(u.decks[:i], u.decks[i+1:]...)
 						u.table.SetRows(updateRows())
 					}
-				} else {
+				} else if len(s) > 0 {
 					u.decks[i].Name = s
 					u.decks[i].Cards.Title = s
 					u.UpdateTable()
