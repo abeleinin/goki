@@ -126,6 +126,8 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				i := u.table.Cursor()
 				if u.del {
 					if s == "yes" {
+						temp := u.table.Cursor()
+						u.table.SetCursor(temp - 1)
 						u.decks[i].DeleteCardsJson()
 						u.decks = append(u.decks[:i], u.decks[i+1:]...)
 						u.table.SetRows(updateRows())

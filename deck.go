@@ -197,7 +197,7 @@ func (d *Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				d.searching = true
 			}
 		case key.Matches(msg, d.keyMap.Open):
-			if !d.searching {
+			if !d.searching && len(d.Cards.Items()) > 0 {
 				if d.reviewData.reviewing {
 					d.reviewData.complete = true
 				}
