@@ -84,8 +84,8 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(msg, u.KeyMap.New):
 			if !u.input.Focused() {
-				newDeck := NewDeck("New Deck", "new_deck.json", []list.Item{})
-				newDeck.RenameCardsJson()
+				newDeck := NewDeck("New Deck", []list.Item{})
+				newDeck.NameDeckJson()
 				u.decks = append(u.decks, newDeck)
 				u.table.SetRows(updateRows())
 				return u.Update(nil)
@@ -137,7 +137,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					u.decks[i].Cards.Title = s
 					u.UpdateTable()
 					u.decks[i].DeleteCardsJson()
-					u.decks[i].RenameCardsJson()
+					u.decks[i].NameDeckJson()
 					u.decks[i].saveCards()
 				}
 				saveDecks()

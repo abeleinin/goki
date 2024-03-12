@@ -116,7 +116,7 @@ func loadDecks() {
 	d := readDecks(appDir + "/decks.json")
 	for _, curr := range d {
 		cards := readCards(appDir + "/cards/" + curr.Json)
-		deck := NewDeck(curr.Name, curr.Json, cards)
+		deck := NewDeck(curr.Name, cards)
 		currUser.decks = append(currUser.decks, deck)
 	}
 }
@@ -215,7 +215,7 @@ func GetScreenDimensions() (int, int) {
 	return width, height
 }
 
-func (d *Deck) RenameCardsJson() {
+func (d *Deck) NameDeckJson() {
 	id := uuid.New()
 	d.Json = fmt.Sprintf("%s_%s%s", NameToFilename(d.Name), id, ".json")
 }
@@ -318,9 +318,9 @@ func readDeckStdin(sep rune) string {
 
 	var deck *Deck
 	if csvName != "" {
-		deck = NewDeck(csvName, "stdin.json", cards)
+		deck = NewDeck(csvName, cards)
 	} else {
-		deck = NewDeck("Loaded Deck", "stdin.json", cards)
+		deck = NewDeck("Loaded Deck", cards)
 	}
 	currUser.decks = append(currUser.decks, deck)
 	saveAll()

@@ -117,17 +117,15 @@ func (d *Deck) UpdateReview() {
 	d.reviewData.complete = false
 }
 
-func NewDeck(name string, jsonName string, lst []list.Item) *Deck {
+func NewDeck(name string, lst []list.Item) *Deck {
 	d := &Deck{
 		help:       help.New(),
 		Name:       name,
-		Json:       jsonName,
 		Cards:      list.New(lst, InitCustomDelegate(), 0, 0),
 		keyMap:     DeckKeyMap(),
 		reviewData: ReviewData{},
 	}
-	// Todo: Remove json param
-	d.RenameCardsJson()
+	d.NameDeckJson()
 	d.Cards.AdditionalFullHelpKeys = func() []key.Binding {
 		return []key.Binding{d.keyMap.New, d.keyMap.Edit, d.keyMap.Delete, d.keyMap.Undo, d.keyMap.Quit}
 	}
