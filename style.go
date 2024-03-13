@@ -31,6 +31,7 @@ var (
 	questionStyle   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10")).MarginTop(2)
 	answerStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("15")).MarginTop(4).MarginBottom(4)
 	deckFooterStyle = lipgloss.NewStyle().MarginTop(10)
+	progressStyle   = lipgloss.NewStyle().MarginTop(1).Render
 
 	// form.go
 	formTitleStyle  = lipgloss.NewStyle().Background(lipgloss.Color("62")).Foreground(lipgloss.Color("230")).Padding(0, 1).MarginTop(1).Render

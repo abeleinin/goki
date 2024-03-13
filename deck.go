@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -24,6 +25,7 @@ type ReviewData struct {
 type Deck struct {
 	keyMap       keyMap
 	help         help.Model
+	progress     progress.Model
 	descShown    bool
 	resultsShown bool
 	searching    bool
@@ -120,11 +122,13 @@ func (d *Deck) UpdateReview() {
 func NewDeck(name string, lst []list.Item) *Deck {
 	d := &Deck{
 		help:       help.New(),
+		progress:   progress.New(),
 		Name:       name,
 		Cards:      list.New(lst, InitCustomDelegate(), 0, 0),
 		keyMap:     DeckKeyMap(),
 		reviewData: ReviewData{},
 	}
+	d.progress.ShowPercentage = false
 	d.NameDeckJson()
 	d.Cards.AdditionalFullHelpKeys = func() []key.Binding {
 		return []key.Binding{d.keyMap.New, d.keyMap.Edit, d.keyMap.Delete, d.keyMap.Undo, d.keyMap.Quit}
@@ -265,6 +269,9 @@ func (d Deck) View() string {
 			sections = append(sections, deckFooterStyle.Render(d.help.View(d.reviewData.curr)))
 		}
 
+		progress := float64(d.reviewData.currIx) / float64(len(d.reviewData.reviewCards))
+		sections = append(sections, progressStyle(d.progress.ViewAs(progress)))
+
 		page := questionStyle.Render(lipgloss.JoinVertical(lipgloss.Center, sections...))
 
 		if screenWidth < 100 {
@@ -276,6 +283,7 @@ func (d Deck) View() string {
 		}
 
 		if cli {
+			// display card in upper right corner of CLI
 			cardStyle = cardStyle.Margin(0, 0, 1)
 		}
 
