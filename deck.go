@@ -1,8 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"log"
 	"math"
 	"math/rand"
+	"os"
 	"strconv"
 	"time"
 
@@ -12,6 +16,7 @@ import (
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/google/uuid"
 )
 
 type ReviewData struct {
@@ -139,6 +144,30 @@ func NewDeck(name string, lst []list.Item) *Deck {
 	d.help.ShowAll = false
 	d.UpdateStatus()
 	return d
+}
+
+func (d *Deck) saveCards() {
+	jsonData, err := json.Marshal(d.Cards.Items())
+	if err != nil {
+		log.Fatal(err)
+	}
+	os.WriteFile(appDir+"/cards/"+d.Json, jsonData, 0644)
+}
+
+func (d *Deck) NameDeckJson() {
+	id := uuid.New()
+	d.Json = fmt.Sprintf("%s_%s%s", NameToFilename(d.Name), id, ".json")
+}
+
+func (d *Deck) DeleteCardsJson() {
+	filePath := appDir + "/cards/" + d.Json
+
+	if _, err := os.Stat(filePath); err == nil {
+		err := os.Remove(filePath)
+		if err != nil {
+			fmt.Println("Error deleting file:", err)
+		}
+	}
 }
 
 func (d Deck) Init() tea.Cmd {

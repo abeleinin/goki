@@ -15,8 +15,9 @@ var (
 
 	appDir  string
 	csvName string
-	cli     bool
 
+	// TODO: Find better solution to seperate cli and tui actions
+	cli = false
 	sep = ','
 
 	helpText = strings.TrimSpace(`
@@ -37,10 +38,21 @@ Create:
 )
 
 func main() {
-	runCLI(os.Args[1:])
+	initGoki(os.Args[1:])
+
+	err := readDeckStdin(sep)
+
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	if !cli {
+		runTUI()
+	}
 }
 
-func runCLI(args []string) {
+func initGoki(args []string) {
 	currUser = NewUser()
 
 	loadDecks()
@@ -52,18 +64,9 @@ func runCLI(args []string) {
 	if err != nil {
 		return
 	}
+}
 
-	if len(args) == 1 {
-		return
-	}
-
-	response := readDeckStdin(sep)
-
-	if response != "" {
-		fmt.Println(response)
-		return
-	}
-
+func runTUI() {
 	p := tea.NewProgram(currUser, tea.WithAltScreen())
 
 	if _, err := p.Run(); err != nil {
@@ -76,12 +79,15 @@ func parseArgs(args []string) error {
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
 		case "list":
+			cli = true
 			PrintDecks()
 		case "-h", "--help", "help":
+			cli = true
 			fmt.Println(gokiLogo)
 			fmt.Println(helpText)
 		case "review":
 			if i <= len(args)-2 {
+				cli = true
 				ReviewCLI(args[i+1])
 				i++
 			} else {
@@ -126,7 +132,6 @@ func ReviewCLI(s string) {
 		fmt.Println("Use 'goki list' to view deck index.")
 		return
 	}
-	cli = true
 	currUser.decks[i].StartReview()
 	if len(currUser.decks[i].reviewData.reviewCards) > 0 {
 		p := tea.NewProgram(currUser.decks[i])
