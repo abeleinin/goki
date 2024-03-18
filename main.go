@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -47,47 +48,13 @@ func runCLI(args []string) {
 	initInput()
 	updateTableColumns()
 
-	if len(args) > 0 {
-		switch args[0] {
-		case "list":
-			PrintDecks()
-		case "-h", "--help", "help":
-			fmt.Println(gokiLogo)
-			fmt.Println(helpText)
-		case "review":
-			if len(args) > 1 {
-				ReviewCLI(args[1])
-			} else {
-				fmt.Println("Not enough args to run 'goki review <deck index>.'")
-				fmt.Println("Use 'goki list' to view deck index.")
-			}
-		case "-n":
-			if len(args) > 1 {
-				csvName = args[1]
-			} else {
-				fmt.Println("Please provide a deck name.")
-				fmt.Println("Use 'goki help' for more info.")
-			}
-		case "-t":
-			{
-				sep = '\t'
-			}
-		default:
-			fmt.Print(args[0], " is not a valid command. Use 'goki -h' for more information.")
-		}
+	err := parseArgs(args)
+	if err != nil {
+		return
+	}
 
-		if len(args) < 2 {
-			return
-		}
-
-		if sep == 0 {
-			for _, arg := range args[1:] {
-				if arg == "-t" {
-					sep = '\t'
-					break
-				}
-			}
-		}
+	if len(args) == 1 {
+		return
 	}
 
 	response := readDeckStdin(sep)
@@ -103,6 +70,53 @@ func runCLI(args []string) {
 		fmt.Println("Error running goki:", err)
 		os.Exit(1)
 	}
+}
+
+func parseArgs(args []string) error {
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
+		case "list":
+			PrintDecks()
+		case "-h", "--help", "help":
+			fmt.Println(gokiLogo)
+			fmt.Println(helpText)
+		case "review":
+			if i <= len(args)-2 {
+				ReviewCLI(args[i+1])
+				i++
+			} else {
+				fmt.Println("Not enough args to run 'goki review <deck index>.'")
+				fmt.Println("Use 'goki list' to view deck index.")
+				return errors.New("Input Error")
+			}
+		case "-n":
+			if i <= len(args)-2 {
+				csvName = args[i+1]
+				i++
+			} else {
+				fmt.Println("Please provide a deck name.")
+				fmt.Println("Use 'goki help' for more info.")
+				return errors.New("Input Error")
+			}
+		case "-t":
+			sep = '\t'
+		default:
+			fmt.Print(args[i], " is not a valid command. Use 'goki -h' for more information.")
+			return errors.New("Input Error")
+		}
+
+	}
+
+	if sep == 0 {
+		for _, arg := range args[1:] {
+			if arg == "-t" {
+				sep = '\t'
+				break
+			}
+		}
+	}
+
+	return nil
 }
 
 func ReviewCLI(s string) {
