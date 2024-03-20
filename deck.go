@@ -8,12 +8,14 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/progress"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
@@ -22,18 +24,20 @@ import (
 type ReviewData struct {
 	reviewing   bool
 	complete    bool
+	fillIn      bool
 	currIx      int
 	curr        *Card
 	reviewCards []*Card
 }
 
 type Deck struct {
-	keyMap       keyMap
-	help         help.Model
-	progress     progress.Model
-	descShown    bool
-	resultsShown bool
-	searching    bool
+	keyMap         keyMap
+	help           help.Model
+	progress       progress.Model
+	fillInResponse textinput.Model
+	descShown      bool
+	resultsShown   bool
+	searching      bool
 
 	numNew      int
 	numLearning int
@@ -54,6 +58,7 @@ func (d Deck) NumComplete() string { return strconv.Itoa(d.numComplete) }
 
 func (d *Deck) StartReview() {
 	d.reviewData.reviewing = true
+	d.reviewData.fillIn = false
 	d.reviewData.complete = false
 	d.reviewData.reviewCards = d.GetReviewCards()
 	d.reviewData.currIx = 0
@@ -133,6 +138,7 @@ func NewDeck(name string, lst []list.Item) *Deck {
 		keyMap:     DeckKeyMap(),
 		reviewData: ReviewData{},
 	}
+	d.initCardInput()
 	d.progress.ShowPercentage = false
 	d.NameDeckJson()
 	d.Cards.AdditionalFullHelpKeys = func() []key.Binding {
@@ -179,20 +185,22 @@ func (d *Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, d.keyMap.Quit):
-			if !d.searching {
+			if !d.searching && !d.fillInResponse.Focused() {
 				saveAll()
 				return d, tea.Quit
 			}
 		case key.Matches(msg, d.keyMap.Back):
-			if cli {
-				saveAll()
-				return d, tea.Quit
-			} else if d.resultsShown {
-				d.resultsShown = false
-			} else {
-				d.UpdateStatus()
-				currUser.UpdateTable()
-				return currUser.Update(nil)
+			if !d.fillInResponse.Focused() {
+				if cli {
+					saveAll()
+					return d, tea.Quit
+				} else if d.resultsShown {
+					d.resultsShown = false
+				} else {
+					d.UpdateStatus()
+					currUser.UpdateTable()
+					return currUser.Update(nil)
+				}
 			}
 		case key.Matches(msg, d.keyMap.New):
 			if !d.searching && !d.reviewData.reviewing {
@@ -222,34 +230,62 @@ func (d *Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				f.edit = true
 				return f.Update(nil)
 			}
-			return d.Update(nil)
+			if !d.fillInResponse.Focused() {
+				return d.Update(nil)
+			}
 		case key.Matches(msg, d.keyMap.Search):
 			if !d.searching {
 				d.searching = true
 			}
 		case key.Matches(msg, d.keyMap.Open):
-			if !d.searching && len(d.Cards.Items()) > 0 {
+			if !d.searching && len(d.Cards.Items()) > 0 && !d.fillInResponse.Focused() {
 				if d.reviewData.reviewing {
 					d.reviewData.complete = true
 				}
 				return d.Update(nil)
 			}
+		case key.Matches(msg, d.keyMap.Fill):
+			if !d.searching && len(d.Cards.Items()) > 0 && !d.fillInResponse.Focused() {
+				if d.reviewData.reviewing {
+					d.reviewData.fillIn = true
+					d.fillInResponse.Focus()
+				}
+				return d.Update(nil)
+			}
 		case key.Matches(msg, d.keyMap.Easy):
-			if d.reviewData.complete {
+			if d.reviewData.complete && !d.reviewData.fillIn {
 				d.reviewData.curr.SM2(Easy)
 				d.UpdateReview()
 			}
 		case key.Matches(msg, d.keyMap.Good):
-			if d.reviewData.complete {
+			if d.reviewData.complete && !d.reviewData.fillIn {
 				d.reviewData.curr.SM2(Good)
 				d.UpdateReview()
 			}
 		case key.Matches(msg, d.keyMap.Again):
-			if d.reviewData.complete {
+			if d.reviewData.complete && !d.reviewData.fillIn {
 				d.reviewData.curr.SM2(Again)
 				d.UpdateReview()
 			}
 		case key.Matches(msg, d.keyMap.Enter):
+			if d.reviewData.complete {
+				d.reviewData.fillIn = false
+				d.fillInResponse.TextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
+				d.fillInResponse.SetValue("")
+				d.UpdateReview()
+			} else if d.fillInResponse.Focused() {
+				s := d.fillInResponse.Value()
+				if strings.ToLower(s) == strings.ToLower(d.reviewData.curr.Back) {
+					d.fillInResponse.TextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#04b52d"))
+					d.reviewData.curr.SM2(Easy)
+				} else {
+					d.fillInResponse.TextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000"))
+					d.reviewData.curr.SM2(Again)
+				}
+				d.reviewData.complete = true
+				d.fillInResponse.Blur()
+				d.fillInResponse.PromptStyle = blurredStyle
+			}
 			if d.searching {
 				d.searching = false
 				d.resultsShown = true
@@ -262,6 +298,11 @@ func (d *Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	if d.reviewData.reviewing {
+		if d.fillInResponse.Focused() {
+			var cmd tea.Cmd
+			d.fillInResponse, cmd = d.fillInResponse.Update(msg)
+			return d, cmd
+		}
 		if d.reviewData.currIx > len(d.reviewData.reviewCards)-1 {
 			if cli {
 				saveAll()
@@ -292,8 +333,14 @@ func (d Deck) View() string {
 		if d.reviewData.complete {
 			back := WrapString(d.reviewData.curr.Back, 40)
 			sections = append(sections, answerStyle.Render(back))
-			sections = append(sections, helpKeyColor.Render("Card Difficulty:"))
-			sections = append(sections, lipgloss.NewStyle().Inline(true).Render(d.help.View(d)))
+			if !d.reviewData.fillIn {
+				sections = append(sections, helpKeyColor.Render("Card Difficulty:"))
+				sections = append(sections, lipgloss.NewStyle().Inline(true).Render(d.help.View(d)))
+			} else {
+				sections = append(sections, promptCompleteStyle.Render(d.fillInResponse.View()))
+			}
+		} else if d.reviewData.fillIn {
+			sections = append(sections, promptFooterStyle.Render(d.fillInResponse.View()))
 		} else {
 			sections = append(sections, deckFooterStyle.Render(d.help.View(d.reviewData.curr)))
 		}

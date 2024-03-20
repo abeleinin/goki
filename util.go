@@ -68,6 +68,13 @@ func initInput() {
 	currUser.input.CharLimit = 20
 }
 
+func (d *Deck) initCardInput() {
+	d.fillInResponse = textinput.New()
+	d.fillInResponse.Placeholder = ""
+	d.fillInResponse.PromptStyle = focusedStyle
+	d.fillInResponse.CharLimit = 20
+}
+
 func saveAll() {
 	saveDecks()
 	for _, deck := range currUser.decks {

@@ -36,12 +36,12 @@ func (d Deck) FullHelp() [][]key.Binding {
 }
 
 func (c Card) ShortHelp() []key.Binding {
-	return []key.Binding{cardKeyMap.Open, cardKeyMap.Back}
+	return []key.Binding{cardKeyMap.Open, cardKeyMap.Fill, cardKeyMap.Back}
 }
 
 func (c Card) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{cardKeyMap.Open, cardKeyMap.Back},
+		{},
 	}
 }
 
@@ -63,6 +63,7 @@ type keyMap struct {
 	Again  key.Binding
 	Search key.Binding
 	Undo   key.Binding
+	Fill   key.Binding
 
 	ShowFullHelp  key.Binding
 	CloseFullHelp key.Binding
@@ -72,6 +73,10 @@ var cardKeyMap = keyMap{
 	Back: key.NewBinding(
 		key.WithKeys("esc"),
 		key.WithHelp("esc", "exit review"),
+	),
+	Fill: key.NewBinding(
+		key.WithKeys("i"),
+		key.WithHelp("i", "type response"),
 	),
 	Open: key.NewBinding(
 		key.WithKeys("o"),
@@ -96,6 +101,10 @@ func DeckKeyMap() keyMap {
 		Open: key.NewBinding(
 			key.WithKeys("o"),
 			key.WithHelp("o", "show back"),
+		),
+		Fill: key.NewBinding(
+			key.WithKeys("i"),
+			key.WithHelp("i", "type response"),
 		),
 		Again: key.NewBinding(
 			key.WithKeys("1"),

@@ -27,11 +27,13 @@ var (
 	// deck.go
 	cardStyle = lipgloss.NewStyle().MarginTop(screenHeight / 10).MarginLeft(3 * screenWidth / 10).Width(2 * screenWidth / 5).
 			Height(screenHeight / 5).Border(lipgloss.RoundedBorder()).Align(lipgloss.Center)
-	listStyle       = lipgloss.NewStyle().Align(lipgloss.Left).MarginLeft((screenWidth - 60) / 2).Padding(2)
-	questionStyle   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10")).MarginTop(2)
-	answerStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("15")).MarginTop(4).MarginBottom(4)
-	deckFooterStyle = lipgloss.NewStyle().MarginTop(10)
-	progressStyle   = lipgloss.NewStyle().MarginTop(1).Render
+	listStyle           = lipgloss.NewStyle().Align(lipgloss.Left).MarginLeft((screenWidth - 60) / 2).Padding(2)
+	questionStyle       = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10")).MarginTop(2)
+	answerStyle         = lipgloss.NewStyle().Foreground(lipgloss.Color("15")).MarginTop(4).MarginBottom(4)
+	deckFooterStyle     = lipgloss.NewStyle().MarginTop(10)
+	progressStyle       = lipgloss.NewStyle().MarginTop(1).Render
+	promptFooterStyle   = lipgloss.NewStyle().MarginTop(10).Width(40)
+	promptCompleteStyle = lipgloss.NewStyle().Margin(0).Width(40)
 
 	// form.go
 	formTitleStyle  = lipgloss.NewStyle().Background(lipgloss.Color("62")).Foreground(lipgloss.Color("230")).Padding(0, 1).MarginTop(1).Render
