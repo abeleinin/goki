@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/csv"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -19,6 +18,7 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/google/uuid"
 	"golang.org/x/term"
 )
 
@@ -81,6 +81,14 @@ func saveDecks() {
 		log.Fatal(err)
 	}
 	os.WriteFile(appDir+"/decks.json", jsonData, 0644)
+}
+
+func (d *Deck) saveCards() {
+	jsonData, err := json.Marshal(d.Cards.Items())
+	if err != nil {
+		log.Fatal(err)
+	}
+	os.WriteFile(appDir+"/cards/"+d.Json, jsonData, 0644)
 }
 
 func createFolders() string {
@@ -207,8 +215,24 @@ func GetScreenDimensions() (int, int) {
 	return width, height
 }
 
+func (d *Deck) NameDeckJson() {
+	id := uuid.New()
+	d.Json = fmt.Sprintf("%s_%s%s", NameToFilename(d.Name), id, ".json")
+}
+
 func NameToFilename(name string) string {
 	return strings.ToLower(strings.ReplaceAll(name, " ", "_"))
+}
+
+func (d *Deck) DeleteCardsJson() {
+	filePath := appDir + "/cards/" + d.Json
+
+	if _, err := os.Stat(filePath); err == nil {
+		err := os.Remove(filePath)
+		if err != nil {
+			fmt.Println("Error deleting file:", err)
+		}
+	}
 }
 
 func WrapString(input string, maxWidth int) string {
@@ -262,24 +286,17 @@ func PrintDecks() {
 	fmt.Println(lipgloss.JoinVertical(lipgloss.Left, section...))
 }
 
-func readDeckStdin(sep rune) error {
+func readDeckStdin(sep rune) string {
 	stat, err := os.Stdin.Stat()
 	if err != nil {
-		return err
+		return ""
 	}
 
 	if stat.Mode()&os.ModeCharDevice != 0 {
-		// No stdin passed to command
-		return nil
+		return ""
 	}
 
-	// importing from stdin is a cli action
-	cli = true
-
 	var cards []list.Item
-	formatErrorCount := 0
-	index := 1
-
 	reader := csv.NewReader(os.Stdin)
 	reader.Comma = sep
 	for {
@@ -295,10 +312,8 @@ func readDeckStdin(sep rune) error {
 			newCard := NewCard(question, answer)
 			cards = append(cards, newCard)
 		} else if len(record) > 2 {
-			fmt.Printf("Format error line %d: Row has %d fields.\n", index, len(record))
-			formatErrorCount++
+			fmt.Println("Incorrect format: record rows must have exactly 2 fields.")
 		}
-		index++
 	}
 
 	var deck *Deck
@@ -310,10 +325,5 @@ func readDeckStdin(sep rune) error {
 	currUser.decks = append(currUser.decks, deck)
 	saveAll()
 
-	if formatErrorCount > 0 {
-		return errors.New("Partial import. Record rows must have exactly 2 fields.")
-	} else {
-		fmt.Println("Import successful!")
-		return nil
-	}
+	return "Import successful!"
 }
