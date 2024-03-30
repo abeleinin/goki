@@ -1,6 +1,9 @@
 package main
 
 import (
+	// "fmt"
+	// "log"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -17,6 +20,7 @@ type User struct {
 	input  textinput.Model
 	decks  []*Deck
 	del    bool
+	gpt    bool
 }
 
 func (u *User) Decks() []*Deck {
@@ -105,6 +109,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				u.table.Focus()
 				u.input.SetValue("")
 				u.del = false
+				u.gpt = false
 			}
 			return u.Update(nil)
 		case key.Matches(msg, u.KeyMap.ShowFullHelp):
@@ -120,6 +125,14 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				u.input.PromptStyle = focusedStyle
 				return u, nil
 			}
+		case key.Matches(msg, u.KeyMap.Gpt):
+			if !u.input.Focused() {
+				u.table.Blur()
+				u.input.Focus()
+				u.input.PromptStyle = focusedStyle
+				u.gpt = true
+				return u, nil
+			}
 		case key.Matches(msg, u.KeyMap.Enter):
 			if u.input.Focused() {
 				s := u.input.Value()
@@ -132,6 +145,12 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						u.decks = append(u.decks[:i], u.decks[i+1:]...)
 						u.table.SetRows(updateRows())
 					}
+				} else if u.gpt {
+					deck := gptClient(s)
+					// deck := localClient()
+					u.decks = append(u.decks, deck)
+					u.table.SetRows(updateRows())
+					// return u.Update(nil)
 				} else if len(s) > 0 {
 					u.decks[i].Name = s
 					u.decks[i].Cards.Title = s
@@ -141,6 +160,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					u.decks[i].saveCards()
 				}
 				saveDecks()
+				u.gpt = false
 				u.del = false
 				u.input.Blur()
 				u.table.Focus()

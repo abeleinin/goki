@@ -327,3 +327,21 @@ func readDeckStdin(sep rune) string {
 
 	return "Import successful!"
 }
+
+func createDeckStdin() string {
+	input, err := io.ReadAll(os.Stdin)
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error reading from stdin: %v\n", err)
+		os.Exit(1)
+	}
+
+	content := strings.TrimSpace(string(input))
+
+	fmt.Println("GPT analyzing your notes...")
+	deck := gptClient(content)
+	currUser.decks = append(currUser.decks, deck)
+	saveAll()
+
+	return fmt.Sprintf("Deck Created as: %v", deck.Name)
+}

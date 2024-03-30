@@ -17,7 +17,8 @@ var (
 	csvName string
 	cli     bool
 
-	sep = ','
+	sep    = ','
+	prompt = false
 
 	helpText = strings.TrimSpace(`
 
@@ -53,11 +54,12 @@ func runCLI(args []string) {
 		return
 	}
 
-	if len(args) == 1 {
-		return
+	var response string
+	if prompt {
+		response = createDeckStdin()
+	} else {
+		response = readDeckStdin(sep)
 	}
-
-	response := readDeckStdin(sep)
 
 	if response != "" {
 		fmt.Println(response)
@@ -100,6 +102,8 @@ func parseArgs(args []string) error {
 			}
 		case "-t":
 			sep = '\t'
+		case "--gpt":
+			prompt = true
 		default:
 			fmt.Print(args[i], " is not a valid command. Use 'goki -h' for more information.")
 			return errors.New("Input Error")
