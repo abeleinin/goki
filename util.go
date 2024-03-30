@@ -118,6 +118,16 @@ func loadDecks() {
 		cards := readCards(appDir + "/cards/" + curr.Json)
 		deck := NewDeck(curr.Name, cards)
 		currUser.decks = append(currUser.decks, deck)
+
+		// Delete old Cards
+		filePath := appDir + "/cards/" + curr.Json
+
+		if _, err := os.Stat(filePath); err == nil {
+			err := os.Remove(filePath)
+			if err != nil {
+				fmt.Println("Error deleting file:", err)
+			}
+		}
 	}
 }
 
