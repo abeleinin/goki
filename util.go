@@ -65,7 +65,7 @@ func initInput() {
 	currUser.input = textinput.New()
 	currUser.input.Placeholder = ""
 	currUser.input.PromptStyle = blurredStyle
-	currUser.input.CharLimit = 20
+	currUser.input.CharLimit = 50
 }
 
 func saveAll() {
@@ -329,17 +329,30 @@ func readDeckStdin(sep rune) string {
 }
 
 func createDeckStdin() string {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return fmt.Sprintf("Error reading from stdin: %v\n", err)
+	}
+
+	if stat.Mode()&os.ModeCharDevice != 0 {
+		return fmt.Sprintf("Error no input provided.")
+	}
+
 	input, err := io.ReadAll(os.Stdin)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error reading from stdin: %v\n", err)
-		os.Exit(1)
+		return fmt.Sprintf("Error reading from stdin: %v\n", err)
 	}
 
 	content := strings.TrimSpace(string(input))
 
 	fmt.Println("GPT analyzing your notes...")
-	deck := gptClient(content)
+	deck, err := gptClient(content)
+
+	if err != nil || deck == nil {
+		return fmt.Sprint("Error: ", err)
+	}
+
 	currUser.decks = append(currUser.decks, deck)
 	saveAll()
 

@@ -13,9 +13,10 @@ import (
 var (
 	currUser *User
 
-	appDir  string
-	csvName string
-	cli     bool
+	appDir        string
+	csvName       string
+	cli           bool
+	criticalError error
 
 	sep    = ','
 	prompt = false
@@ -30,11 +31,12 @@ Usage:
   goki review <deck index>  - review deck from cli
 		
 Create:
-  opt:                 - optional flags
-    -n "deck name"     - assigned deck name to imported cards
-    -t                 - assigns tab sep (default sep=',')
+  opt:                      - optional flags
+    -n "deck name"          - assigned deck name to imported cards
+    -t                      - assigns tab sep (default sep=',')
 
-  goki opt < deck.txt  - import deck in using stdin`)
+  goki opt < deck.txt       - import deck in using stdin
+  goki --gpt < my_notes.txt - generate a deck of your notes using OpenAI API`)
 )
 
 func main() {
@@ -68,7 +70,12 @@ func runCLI(args []string) {
 
 	p := tea.NewProgram(currUser, tea.WithAltScreen())
 
-	if _, err := p.Run(); err != nil {
+	if _, err := p.Run(); err != nil || criticalError != nil {
+
+		if criticalError != nil {
+			err = criticalError
+		}
+
 		fmt.Println("Error running goki:", err)
 		os.Exit(1)
 	}
@@ -82,6 +89,8 @@ func parseArgs(args []string) error {
 		case "-h", "--help", "help":
 			fmt.Println(gokiLogo)
 			fmt.Println(helpText)
+			// TODO: Not an error. Temp fix.
+			return errors.New("")
 		case "review":
 			if i <= len(args)-2 {
 				ReviewCLI(args[i+1])

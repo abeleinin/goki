@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -49,8 +49,13 @@ type CardInfo struct {
 	Back  string `json:"back"`
 }
 
-func gptClient(prompt string) *Deck {
+func gptClient(prompt string) (*Deck, error) {
 	apiKey := os.Getenv("OPENAI_API_KEY")
+
+	if apiKey == "" {
+		return nil, errors.New("No API key set.")
+	}
+
 	url := "https://api.openai.com/v1/chat/completions"
 
 	systemPrompt := "You are a helpful flashcard making assistant. Given topic, category, or concept generate a JSON object with 'title' (string) and 'flashcards' (object) with 'front' and 'back' values containing flashcard data."
@@ -68,12 +73,12 @@ func gptClient(prompt string) *Deck {
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		panic(err)
+		return nil, errors.New("Parsing JSON.")
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		panic(err)
+		return nil, errors.New("Invalid http request.")
 	}
 
 	req.Header.Set("OpenAI-Beta", "assistants=v1")
@@ -83,13 +88,13 @@ func gptClient(prompt string) *Deck {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return nil, errors.New("Invalid http request.")
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		panic(err)
+		return nil, errors.New("Invalid response.")
 	}
 
 	// Test saved requests
@@ -101,13 +106,13 @@ func gptClient(prompt string) *Deck {
 	var chatCompletion ChatCompletion
 	err = json.Unmarshal([]byte(body), &chatCompletion)
 	if err != nil {
-		fmt.Println("error unmarshaling JSON:", err)
+		return nil, errors.New("Unmarshal JSON.")
 	}
 
 	var content Response
 	err = json.Unmarshal([]byte(chatCompletion.Choices[0].Message.Content), &content)
 	if err != nil {
-		fmt.Println("error unmarshaling JSON:", err)
+		return nil, errors.New("Unmarshal JSON.")
 	}
 
 	cards := []list.Item{}
@@ -116,5 +121,5 @@ func gptClient(prompt string) *Deck {
 		cards = append(cards, card)
 	}
 
-	return NewDeck(content.DeckTitle, cards)
+	return NewDeck(content.DeckTitle, cards), nil
 }
