@@ -346,8 +346,14 @@ func createDeckStdin() string {
 
 	content := strings.TrimSpace(string(input))
 
-	fmt.Println("GPT analyzing your notes...")
-	deck, err := gptClient(content)
+	response := generateDeck(content)
+
+	return response
+}
+
+func generateDeck(s string) string {
+	fmt.Println("Generating deck...")
+	deck, err := gptClient(s)
 
 	if err != nil || deck == nil {
 		return fmt.Sprint("Error: ", err)

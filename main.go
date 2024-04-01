@@ -86,10 +86,11 @@ func parseArgs(args []string) error {
 		switch args[i] {
 		case "list":
 			PrintDecks()
+			// TODO: Not an error. Temp fix.
+			return errors.New("")
 		case "-h", "--help", "help":
 			fmt.Println(gokiLogo)
 			fmt.Println(helpText)
-			// TODO: Not an error. Temp fix.
 			return errors.New("")
 		case "review":
 			if i <= len(args)-2 {
@@ -113,6 +114,11 @@ func parseArgs(args []string) error {
 			sep = '\t'
 		case "--gpt":
 			prompt = true
+			if i <= len(args)-2 {
+				response := generateDeck(args[i+1])
+				i++
+				return errors.New(response)
+			}
 		default:
 			fmt.Print(args[i], " is not a valid command. Use 'goki -h' for more information.")
 			return errors.New("Input Error")
