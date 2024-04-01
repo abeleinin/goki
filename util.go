@@ -65,7 +65,7 @@ func initInput() {
 	currUser.input = textinput.New()
 	currUser.input.Placeholder = ""
 	currUser.input.PromptStyle = blurredStyle
-	currUser.input.CharLimit = 20
+	currUser.input.CharLimit = 50
 }
 
 func saveAll() {
@@ -194,8 +194,8 @@ func readCards(fileName string) []list.Item {
 	cards := []list.Item{}
 	for _, jsonCard := range jsonCards {
 		card := Card{
-			Front:        jsonCard.Front,
-			Back:         jsonCard.Back,
+			Front:        WrapString(jsonCard.Front, 70),
+			Back:         WrapString(jsonCard.Back, 70),
 			Score:        jsonCard.Score,
 			Interval:     jsonCard.Interval,
 			EaseFactor:   jsonCard.EaseFactor,
@@ -289,7 +289,8 @@ func PrintDecks() {
 		section = append(section, spaceStr+strconv.Itoa(i)+". "+deck.Name)
 	}
 	if len(currUser.decks) == 0 {
-		section = append(section, "    No decks. Use 'N' in TUI or import from stdin.\n")
+		msg := "    No decks.\n    Press 'N' to create a new deck.\n    Use 'goki --gpt <prompt>' to generate a new deck using GPT."
+		section = append(section, msg)
 	} else {
 		section = append(section, "\nuse 'goki review <deck index>' to review a deck.\n")
 	}
@@ -336,4 +337,41 @@ func readDeckStdin(sep rune) string {
 	saveAll()
 
 	return "Import successful!"
+}
+
+func createDeckStdin() string {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return fmt.Sprintf("Error reading from stdin: %v\n", err)
+	}
+
+	if stat.Mode()&os.ModeCharDevice != 0 {
+		return fmt.Sprintf("Error no input provided.")
+	}
+
+	input, err := io.ReadAll(os.Stdin)
+
+	if err != nil {
+		return fmt.Sprintf("Error reading from stdin: %v\n", err)
+	}
+
+	content := strings.TrimSpace(string(input))
+
+	response := generateDeck(content)
+
+	return response
+}
+
+func generateDeck(s string) string {
+	fmt.Println("Generating deck...")
+	deck, err := gptClient(s)
+
+	if err != nil || deck == nil {
+		return fmt.Sprint("Error: ", err)
+	}
+
+	currUser.decks = append(currUser.decks, deck)
+	saveAll()
+
+	return fmt.Sprintf("Deck Created as: %v", deck.Name)
 }

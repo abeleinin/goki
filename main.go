@@ -13,11 +13,13 @@ import (
 var (
 	currUser *User
 
-	appDir  string
-	csvName string
-	cli     bool
+	appDir        string
+	csvName       string
+	cli           bool
+	criticalError error
 
-	sep = ','
+	sep    = ','
+	prompt = false
 
 	helpText = strings.TrimSpace(`
 
@@ -28,12 +30,16 @@ Usage:
   goki list                 - view deck index
   goki review <deck index>  - review deck from cli
 		
-Create:
-  opt:                 - optional flags
-    -n "deck name"     - assigned deck name to imported cards
-    -t                 - assigns tab sep (default sep=',')
+Import:
+  opt:                      - optional flags
+    -n "deck name"          - assigned deck name to imported cards
+    -t                      - assigns tab sep (default sep=',')
 
-  goki opt < deck.txt  - import deck in using stdin`)
+  goki opt < deck.txt       - import deck in using stdin
+
+Generate:
+  goki --gpt "my prompt"    - generate a deck from a text prompt
+  goki --gpt < my_notes.txt - generate a deck from text or markdown files`)
 )
 
 func main() {
@@ -53,11 +59,12 @@ func runCLI(args []string) {
 		return
 	}
 
-	if len(args) == 1 {
-		return
+	var response string
+	if prompt {
+		response = createDeckStdin()
+	} else {
+		response = readDeckStdin(sep)
 	}
-
-	response := readDeckStdin(sep)
 
 	if response != "" {
 		fmt.Println(response)
@@ -66,7 +73,12 @@ func runCLI(args []string) {
 
 	p := tea.NewProgram(currUser, tea.WithAltScreen())
 
-	if _, err := p.Run(); err != nil {
+	if _, err := p.Run(); err != nil || criticalError != nil {
+
+		if criticalError != nil {
+			err = criticalError
+		}
+
 		fmt.Println("Error running goki:", err)
 		os.Exit(1)
 	}
@@ -77,9 +89,12 @@ func parseArgs(args []string) error {
 		switch args[i] {
 		case "list":
 			PrintDecks()
+			// TODO: Not an error. Temp fix.
+			return errors.New("")
 		case "-h", "--help", "help":
 			fmt.Println(gokiLogo)
 			fmt.Println(helpText)
+			return errors.New("")
 		case "review":
 			if i <= len(args)-2 {
 				ReviewCLI(args[i+1])
@@ -100,6 +115,13 @@ func parseArgs(args []string) error {
 			}
 		case "-t":
 			sep = '\t'
+		case "--gpt":
+			prompt = true
+			if i <= len(args)-2 {
+				response := generateDeck(args[i+1])
+				i++
+				return errors.New(response)
+			}
 		default:
 			fmt.Print(args[i], " is not a valid command. Use 'goki -h' for more information.")
 			return errors.New("Input Error")

@@ -8,7 +8,7 @@ func (u User) ShortHelp() []key.Binding {
 
 func (u User) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{u.KeyMap.Help, u.KeyMap.Up, u.KeyMap.Down, u.KeyMap.Quit},
+		{u.KeyMap.Help, u.KeyMap.Up, u.KeyMap.Down, u.KeyMap.Gpt},
 		{u.KeyMap.New, u.KeyMap.Open, u.KeyMap.Edit, u.KeyMap.Review},
 	}
 }
@@ -63,6 +63,7 @@ type keyMap struct {
 	Again  key.Binding
 	Search key.Binding
 	Undo   key.Binding
+	Gpt    key.Binding
 
 	ShowFullHelp  key.Binding
 	CloseFullHelp key.Binding
@@ -206,6 +207,10 @@ func DefaultKeyMap() keyMap {
 		CloseFullHelp: key.NewBinding(
 			key.WithKeys("?"),
 			key.WithHelp("?", "close help"),
+		),
+		Gpt: key.NewBinding(
+			key.WithKeys("G"),
+			key.WithHelp("G", "query gpt"),
 		),
 	}
 }
