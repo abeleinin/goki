@@ -279,7 +279,8 @@ func PrintDecks() {
 		section = append(section, spaceStr+strconv.Itoa(i)+". "+deck.Name)
 	}
 	if len(currUser.decks) == 0 {
-		section = append(section, "    No decks. Use 'N' in TUI or import from stdin.\n")
+		msg := "    No decks.\n    Press 'N' to create a new deck.\n    Use 'goki --gpt <prompt>' to generate a new deck using GPT."
+		section = append(section, msg)
 	} else {
 		section = append(section, "\nuse 'goki review <deck index>' to review a deck.\n")
 	}

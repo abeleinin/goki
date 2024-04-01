@@ -30,13 +30,16 @@ Usage:
   goki list                 - view deck index
   goki review <deck index>  - review deck from cli
 		
-Create:
+Import:
   opt:                      - optional flags
     -n "deck name"          - assigned deck name to imported cards
     -t                      - assigns tab sep (default sep=',')
 
   goki opt < deck.txt       - import deck in using stdin
-  goki --gpt < my_notes.txt - generate a deck of your notes using OpenAI API`)
+
+Generate:
+  goki --gpt "my prompt"    - generate a deck from a text prompt
+  goki --gpt < my_notes.txt - generate a deck from text or markdown files`)
 )
 
 func main() {

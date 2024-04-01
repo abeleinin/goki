@@ -2,7 +2,10 @@
 
 A terminal-based spaced repetition flashcard tool. 
 
-**Now supports importing decks from Anki!**
+## Now supports OpenAI API Integration and...
+
+- **Importing decks from Anki and csv's!**
+- **Reviewing from TUI and Terminal!**
 
 ![Screenshot example of Goki](img/goki_main.png)
 
@@ -17,6 +20,7 @@ Goki is an intelligent flashcard management tool inspired by
 - [Key Mappings](#key-mappings)
 - [Installation](#installation)
 - [Examples](#examples)
+    - [OpenAI API Integration](#openai-api-integration)
     - [Import Flashcards](#import-from-csv)
     - [Reviewing Flashcards](#reviewing-flashcards)
     - [Creating Decks](#creating-decks)
@@ -42,6 +46,7 @@ which uses user feedback on card difficulty to effectively space out practice se
 |--------------|------------|
 | Review Decks Flashcards | `r`        |
 | Create New Deck         | `N`        |
+| Generate a Deck using GPT | `G`        |
 | View Deck Card List     | `o`        |
 | Edit Deck Name          | `e`        |
 | Delete Deck      | `d`        |
@@ -111,6 +116,26 @@ go build
 
 ## Examples
 
+### OpenAI API Integration
+
+![gpt demo](img/gpt_demo.gif)
+
+Supports:
+
+- Generating decks from text or markdown files using `stdin`
+- Generating arbitrary decks from a `<prompt>` in CLI and TUI
+
+Goki uses `gpt-4-turbo-preview`. Set the `OPENAI_API_KEY` environment variable to a valid OpenAI key. You can generate one [here](https://platform.openai.com/api-keys).
+
+There are two ways to generate decks using the API. First, you can use `stdin` to generate a deck from your notes:
+
+```
+goki --gpt < my_notes.txt
+goki --gpt "my prompt"
+```
+
+Or from the TUI, you can use the `G` key to be prompted to type some content on the bottom of the screen relating to the deck you want to generate. Testing has been limited, so please [report](https://github.com/abeleinin/goki/issues/new) any bugs or errors that occur.
+
 ### Import from CSV
 
 ![Import from stdin](img/import.gif)
@@ -176,12 +201,16 @@ Usage:
   goki list                 - view deck index
   goki review <deck index>  - review deck from cli
 		
-Create:
-  opt:                 - optional flags
-    -n "deck name"     - assigned deck name to imported cards
-    -t                 - assigns tab sep (default sep=',')
+Import:
+  opt:                      - optional flags
+    -n "deck name"          - assigned deck name to imported cards
+    -t                      - assigns tab sep (default sep=',')
 
-  goki opt < deck.txt  - import deck in using stdin
+  goki opt < deck.txt       - import deck in using stdin
+
+Generate:
+  goki --gpt "my prompt"    - generate a deck from a text prompt
+  goki --gpt < my_notes.txt - generate a deck from text or markdown files
 ```
 
 ## Resources
