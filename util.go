@@ -184,8 +184,8 @@ func readCards(fileName string) []list.Item {
 	cards := []list.Item{}
 	for _, jsonCard := range jsonCards {
 		card := Card{
-			Front:        jsonCard.Front,
-			Back:         jsonCard.Back,
+			Front:        WrapString(jsonCard.Front, 70),
+			Back:         WrapString(jsonCard.Back, 70),
 			Score:        jsonCard.Score,
 			Interval:     jsonCard.Interval,
 			EaseFactor:   jsonCard.EaseFactor,

@@ -117,7 +117,9 @@ func gptClient(prompt string) (*Deck, error) {
 
 	cards := []list.Item{}
 	for _, cardInfo := range content.FlashCards {
-		card := NewCard(cardInfo.Front, cardInfo.Back)
+		front := WrapString(cardInfo.Front, 70)
+		back := WrapString(cardInfo.Back, 70)
+		card := NewCard(front, back)
 		cards = append(cards, card)
 	}
 
