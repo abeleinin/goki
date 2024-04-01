@@ -163,6 +163,9 @@ func (d *Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				d.UpdateStatus()
 				currUser.UpdateTable()
+				if currUser.gptLoading {
+					return currUser, currUser.spinner.Tick
+				}
 				return currUser.Update(nil)
 			}
 		case key.Matches(msg, d.keyMap.New):
