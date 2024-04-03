@@ -118,7 +118,7 @@ go build
 
 ### OpenAI API Integration
 
-![gpt demo](img/gpt_demo.gif)
+https://github.com/abeleinin/goki/assets/95333017/96234116-ef6f-4238-959a-b972e9adf0b3
 
 Supports:
 
