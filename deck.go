@@ -119,7 +119,7 @@ func (d *Deck) UpdateReview() {
 	d.reviewData.complete = false
 }
 
-func NewDeck(name string, lst []list.Item) *Deck {
+func InitDeck(name string, uuid string, lst []list.Item) *Deck {
 	d := &Deck{
 		help:       help.New(),
 		progress:   progress.New(),
@@ -129,7 +129,14 @@ func NewDeck(name string, lst []list.Item) *Deck {
 		reviewData: ReviewData{},
 	}
 	d.progress.ShowPercentage = false
-	d.NameDeckJson()
+
+	if (uuid == "") {
+		d.NameCardsJson()
+	} else {
+		d.Json = uuid
+	}
+
+	d.NameCardsJson()
 	d.Cards.AdditionalFullHelpKeys = func() []key.Binding {
 		return []key.Binding{d.keyMap.New, d.keyMap.Edit, d.keyMap.Delete, d.keyMap.Undo, d.keyMap.Quit}
 	}
@@ -179,6 +186,7 @@ func (d *Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				d.deletedCards = append(d.deletedCards, d.Cards.Items()[d.Cards.Index()].(*Card))
 				d.Cards.RemoveItem(d.Cards.Index())
 				d.UpdateStatus()
+				d.saveCards()	
 				return d.Update(nil)
 			}
 		case key.Matches(msg, d.keyMap.Undo):
@@ -212,16 +220,19 @@ func (d *Deck) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if d.reviewData.complete {
 				d.reviewData.curr.SM2(Easy)
 				d.UpdateReview()
+				d.saveCards()
 			}
 		case key.Matches(msg, d.keyMap.Good):
 			if d.reviewData.complete {
 				d.reviewData.curr.SM2(Good)
 				d.UpdateReview()
+				d.saveCards()
 			}
 		case key.Matches(msg, d.keyMap.Again):
 			if d.reviewData.complete {
 				d.reviewData.curr.SM2(Again)
 				d.UpdateReview()
+				d.saveCards()
 			}
 		case key.Matches(msg, d.keyMap.Enter):
 			if d.searching {

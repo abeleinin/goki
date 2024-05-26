@@ -106,8 +106,8 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(msg, u.KeyMap.New):
 			if !u.input.Focused() {
-				newDeck := NewDeck("New Deck", []list.Item{})
-				newDeck.NameDeckJson()
+				newDeck := InitDeck("New Deck", "", []list.Item{})
+				newDeck.NameCardsJson()
 				u.decks = append(u.decks, newDeck)
 				u.table.SetRows(updateRows())
 				return u.Update(nil)
@@ -156,6 +156,7 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				s := u.input.Value()
 				i := u.table.Cursor()
 				if u.del {
+					// Delete
 					if s == "yes" {
 						temp := u.table.Cursor()
 						u.table.SetCursor(temp - 1)
@@ -164,14 +165,15 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						u.table.SetRows(updateRows())
 					}
 				} else if u.gpt {
+					// GPT request
 					go asyncGpt(u, s)
 					u.gpt = false
 				} else if len(s) > 0 {
+					// Rename
 					u.decks[i].Name = s
 					u.decks[i].Cards.Title = s
 					u.UpdateTable()
-					u.decks[i].DeleteCardsJson()
-					u.decks[i].NameDeckJson()
+					saveDecks()
 					u.decks[i].saveCards()
 				}
 				saveDecks()

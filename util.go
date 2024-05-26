@@ -116,18 +116,8 @@ func loadDecks() {
 	d := readDecks(appDir + "/decks.json")
 	for _, curr := range d {
 		cards := readCards(appDir + "/cards/" + curr.Json)
-		deck := NewDeck(curr.Name, cards)
+		deck := InitDeck(curr.Name, curr.Json, cards)
 		currUser.decks = append(currUser.decks, deck)
-
-		// Delete old Cards
-		filePath := appDir + "/cards/" + curr.Json
-
-		if _, err := os.Stat(filePath); err == nil {
-			err := os.Remove(filePath)
-			if err != nil {
-				fmt.Println("Error deleting file:", err)
-			}
-		}
 	}
 }
 
@@ -225,13 +215,9 @@ func GetScreenDimensions() (int, int) {
 	return width, height
 }
 
-func (d *Deck) NameDeckJson() {
+func (d *Deck) NameCardsJson() {
 	id := uuid.New()
-	d.Json = fmt.Sprintf("%s_%s%s", NameToFilename(d.Name), id, ".json")
-}
-
-func NameToFilename(name string) string {
-	return strings.ToLower(strings.ReplaceAll(name, " ", "_"))
+	d.Json = fmt.Sprintf("%s%s", id, ".json")
 }
 
 func (d *Deck) DeleteCardsJson() {
@@ -329,9 +315,9 @@ func readDeckStdin(sep rune) string {
 
 	var deck *Deck
 	if csvName != "" {
-		deck = NewDeck(csvName, cards)
+		deck = InitDeck(csvName, "", cards)
 	} else {
-		deck = NewDeck("Loaded Deck", cards)
+		deck = InitDeck("Loaded Deck", "", cards)
 	}
 	currUser.decks = append(currUser.decks, deck)
 	saveAll()
@@ -346,7 +332,7 @@ func createDeckStdin() string {
 	}
 
 	if stat.Mode()&os.ModeCharDevice != 0 {
-		return fmt.Sprintf("Error no input provided.")
+		return "Error no input provided."
 	}
 
 	input, err := io.ReadAll(os.Stdin)

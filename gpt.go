@@ -123,5 +123,5 @@ func gptClient(prompt string) (*Deck, error) {
 		cards = append(cards, card)
 	}
 
-	return NewDeck(content.DeckTitle, cards), nil
+	return InitDeck(content.DeckTitle, "", cards), nil
 }
