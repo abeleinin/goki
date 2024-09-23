@@ -21,6 +21,17 @@ type ChatCompletion struct {
 	SystemFingerprint string   `json:"system_fingerprint"`
 }
 
+type ErrorResponse struct {
+	Error ErrorDetail `json:"error"`
+}
+
+type ErrorDetail struct {
+	Message string  `json:"message"`
+	Type    string  `json:"type"`
+	Param   *string `json:"param"`
+	Code    string  `json:"code"`
+}
+
 type Choice struct {
 	Index        int              `json:"index"`
 	Message      Message          `json:"message"`
@@ -102,6 +113,16 @@ func gptClient(prompt string) (*Deck, error) {
 
 	// Save output from api
 	// os.WriteFile("gpt.json", body, 0644)
+
+	var errorResponse ErrorResponse
+	err = json.Unmarshal([]byte(body), &errorResponse)
+	if err != nil {
+		return nil, errors.New("Unmarshal JSON.")
+	}
+
+	if errorResponse.Error != (ErrorDetail{}) {
+		return nil, errors.New(errorResponse.Error.Code)
+	}
 
 	var chatCompletion ChatCompletion
 	err = json.Unmarshal([]byte(body), &chatCompletion)

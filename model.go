@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -21,6 +23,7 @@ type User struct {
 	del        bool
 	gpt        bool
 	gptLoading bool
+	gptError   string
 }
 
 func (u *User) Decks() []*Deck {
@@ -65,14 +68,13 @@ func (u *User) Init() tea.Cmd {
 func asyncGpt(u *User, s string) {
 	u.gptLoading = true
 	deck, err := gptClient(s)
-	if err != nil {
-		// Set critical error so that the error is printed after tui exit
-		criticalError = err
-		u.Update(tea.Quit)
+	if err != nil || deck == nil {
+		u.gptError = err.Error()
+	} else {
+		u.decks = append(u.decks, deck)
+		u.table.SetRows(updateRows())
+		u.Update(nil)
 	}
-	u.decks = append(u.decks, deck)
-	u.table.SetRows(updateRows())
-	u.Update(nil)
 	u.gptLoading = false
 	u.gpt = false
 }
@@ -144,7 +146,8 @@ func (u *User) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return u, nil
 			}
 		case key.Matches(msg, u.KeyMap.Gpt):
-			if !u.input.Focused() && !u.gptLoading {
+			apiKey := os.Getenv("OPENAI_API_KEY")
+			if !u.input.Focused() && !u.gptLoading && apiKey != "" {
 				u.table.Blur()
 				u.input.Focus()
 				u.input.PromptStyle = focusedStyle
@@ -223,6 +226,8 @@ func (u *User) View() string {
 		msg      string
 	)
 
+	apiKey := os.Getenv("OPENAI_API_KEY")
+
 	if u.del {
 		msg = "Type 'yes' to confirm deletion:"
 	} else if u.gptLoading {
@@ -230,7 +235,14 @@ func (u *User) View() string {
 	} else if u.gpt {
 		msg = "Prompt GPT to generate a deck:"
 	} else if len(u.decks) == 0 {
-		msg = "No decks.\nPress 'N' to create a new deck.\nPress 'G' to generate a new deck using GPT."
+		msg = "No decks.\nPress 'N' to create a new deck."
+		if apiKey != "" {
+			msg += "\nPress 'G' to generate a new deck using GPT."
+		} else {
+			msg += "\nSet OPENAI_API_KEY to generate a new deck using GPT."
+		}
+	} else if u.gptError != "" {
+		msg = "Error Running GPT: " + u.gptError
 	}
 
 	footer = append(footer, homeFooterStyle.Render(msg))
